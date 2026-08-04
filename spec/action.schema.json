@@ -1,0 +1,350 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "GENERATED from vocabulary.yaml — do not edit by hand (run: python spec/generate.py). SPDX-License-Identifier: CC-BY-4.0",
+  "title": "AAG Action",
+  "description": "A single Agent Action Grammar action (AAG 0.5.0).",
+  "type": "object",
+  "required": [
+    "agent_id",
+    "task_id",
+    "timestamp",
+    "step_name",
+    "type"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "agent_id": {
+      "type": "string",
+      "description": "Stable identifier of the agent performing this action. A task may carry actions from several agents that share memory."
+    },
+    "task_id": {
+      "type": "string",
+      "description": "The logical task — one shared-memory scope. Unique per run; groups every action of the task."
+    },
+    "parent_task_id": {
+      "type": "string",
+      "description": "The task_id of the task that spawned this one."
+    },
+    "action_id": {
+      "type": "string",
+      "description": "Identifier of one action; emitted on an intended record and repeated on the record that settles it (completed or denied)."
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Sequence number within the task. Absent for an intended action; assigned when recorded."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the harness emitted the action (ISO 8601)."
+    },
+    "step_name": {
+      "type": "string",
+      "description": "Human-readable label for the action."
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "task.start",
+        "task.end",
+        "task.error",
+        "task.idle",
+        "step.resource",
+        "step.message",
+        "step.self",
+        "step.model",
+        "step.credential",
+        "step.exec",
+        "step.gate",
+        "step.unknown"
+      ],
+      "description": "The action type; one of `action_types`."
+    },
+    "verb": {
+      "type": "string",
+      "enum": [
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE"
+      ],
+      "description": "GET / POST / PATCH / DELETE."
+    },
+    "aag_version": {
+      "type": "string",
+      "description": "The AAG version the stream conforms to."
+    },
+    "properties": {
+      "type": "object",
+      "description": "Nested contextual object (see `properties`). Open and extensible."
+    },
+    "input": {
+      "description": "The arguments to the action."
+    },
+    "output": {
+      "description": "The result of the action. For a step, an absent `output` marks an INTENDED action (pre-execution); a present one marks a COMPLETED action."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "task.start"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "verb": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "task.end"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "verb": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "task.error"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "verb": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "task.idle"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "verb": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "step.resource"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "required": [
+          "verb"
+        ],
+        "properties": {
+          "verb": {
+            "enum": [
+              "GET",
+              "POST",
+              "PATCH",
+              "DELETE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "step.message"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "required": [
+          "verb"
+        ],
+        "properties": {
+          "verb": {
+            "enum": [
+              "GET",
+              "POST"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "step.self"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "required": [
+          "verb"
+        ],
+        "properties": {
+          "verb": {
+            "enum": [
+              "GET",
+              "POST",
+              "PATCH",
+              "DELETE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "step.model"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "verb": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "step.credential"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "required": [
+          "verb"
+        ],
+        "properties": {
+          "verb": {
+            "enum": [
+              "GET",
+              "POST",
+              "PATCH",
+              "DELETE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "step.exec"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "verb": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "step.gate"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "verb": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "step.unknown"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "verb": false
+        }
+      }
+    },
+    {
+      "if": {
+        "not": {
+          "properties": {
+            "type": {
+              "const": "task.start"
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "parent_task_id": false,
+          "aag_version": false
+        }
+      }
+    }
+  ]
+}

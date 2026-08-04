@@ -1,0 +1,37 @@
+Agent Action Grammar (AAG) — specification, schemas, and documentation
+Copyright (c) 2026 the Agent Action Grammar contributors.
+
+This repository is dual-licensed:
+
+  - The specification text, schemas, documentation, and examples are licensed
+    under CC BY 4.0 (this file).
+  - The software (spec/generate.py, plus everything under validator/ and tests/)
+    is licensed under the Apache License, Version 2.0; see LICENSE-CODE.
+
+--------------------------------------------------------------------------------
+
+This work — the specification text, the schemas, and the accompanying
+documentation and examples in this repository — is licensed under the
+Creative Commons Attribution 4.0 International License (CC BY 4.0).
+
+SPDX-License-Identifier: CC-BY-4.0
+
+You are free to:
+  - Share  — copy and redistribute the material in any medium or format;
+  - Adapt  — remix, transform, and build upon the material for any purpose,
+             even commercially.
+
+Under the following terms:
+  - Attribution — You must give appropriate credit, provide a link to the
+    license, and indicate if changes were made. You may do so in any reasonable
+    manner, but not in any way that suggests the licensor endorses you or your
+    use.
+
+No additional restrictions — You may not apply legal terms or technological
+measures that legally restrict others from doing anything the license permits.
+
+The full legal text of the license is available at:
+    https://creativecommons.org/licenses/by/4.0/legalcode
+
+A human-readable summary (not a substitute for the license) is at:
+    https://creativecommons.org/licenses/by/4.0/

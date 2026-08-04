@@ -1,0 +1,11 @@
+{
+  "agent_id": "coding-agent",
+  "task_id": "run-e5f6",
+  "seq": 4,
+  "timestamp": "2026-07-30T10:05:00Z",
+  "step_name": "run_tests",
+  "type": "step.exec",
+  "input": { "cwd": "/workspace" },
+  "output": { "exit_code": 0 },
+  "properties": { "command": "pytest -q" }
+}

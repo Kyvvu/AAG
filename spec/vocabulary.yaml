@@ -1,0 +1,231 @@
+# SPDX-License-Identifier: CC-BY-4.0
+# Agent Action Grammar (AAG) — canonical vocabulary.
+#
+# This file is the versioned, machine-readable source of truth for the AAG.
+# The human-readable explanation lives in ../docs/model.md; where the two
+# differ, this file takes priority.
+#
+# What is CLOSED vs OPEN:
+#   - The `verbs` and `action_types` enums below are CLOSED. Any (type, verb)
+#     pair not derivable from `action_types` is malformed.
+#   - `properties` are OPEN: no property is required and an emitter may add any
+#     group or leaf. The leaves listed here are *suggested*, so that the
+#     security-relevant facts are named the same way everywhere. Any `values`
+#     listed for a property are suggested, not enforced.
+
+version: "0.5.0"
+name: "Agent Action Grammar"
+license: "CC-BY-4.0"
+spec: "../docs/model.md"
+
+# --- Scopes ------------------------------------------------------------------
+# Derived from the action-type prefix (task.* -> task, else step). Not carried
+# as a separate field; listed for consumers.
+scopes: [task, step]
+
+# --- Verbs -------------------------------------------------------------------
+# A verb records the DATA-FLOW intent of a step, not the HTTP method a tool
+# happened to use.
+verbs:
+  GET:
+    meaning: "Data enters the task; nothing task-resident meaningfully leaves."
+  POST:
+    meaning: "Task data leaves the task, or state outside the task's memory is created."
+  PATCH:
+    meaning: "State outside the task's memory is modified."
+  DELETE:
+    meaning: "State outside the task's memory is removed (a destructive action)."
+
+# --- Action types ------------------------------------------------------------
+# The twelve types. `verbs: []` means the type takes no verb. The set of valid
+# (type, verb) pairs is exactly each type crossed with its listed verbs.
+action_types:
+
+  # Task lifecycle (scope: task, no verb)
+  task.start:
+    scope: task
+    verbs: []
+    meaning: "Opens a task; establishes a fresh memory scope, nothing carried from prior tasks. May carry agent context (see properties)."
+  task.end:
+    scope: task
+    verbs: []
+    meaning: "Closes a task; the memory scope ends. Nothing implicitly survives into another task."
+  task.error:
+    scope: task
+    verbs: []
+    meaning: "The task reached an abnormal state. A lifecycle marker; the task may resume afterwards."
+  task.idle:
+    scope: task
+    verbs: []
+    meaning: "The task is paused (e.g. awaiting input). Memory persists across the idle period."
+
+  # Steps (scope: step)
+  step.resource:
+    scope: step
+    verbs: [GET, POST, PATCH, DELETE]
+    meaning: "A call to a resource or tool outside the agent. GET reads; POST/PATCH/DELETE write. The general workhorse."
+  step.message:
+    scope: step
+    verbs: [GET, POST]
+    meaning: "Communication with whatever the agent interacts with (a user, a parent agent, or a trigger). GET receives, POST sends."
+  step.self:
+    scope: step
+    verbs: [GET, POST, PATCH, DELETE]
+    meaning: "The agent reading or writing its own state (e.g. memory). Writes may alter state that persists across tasks."
+  step.model:
+    scope: step
+    verbs: []
+    meaning: "A model invocation. Data flows both ways (context out, completion in), so no single verb applies."
+  step.credential:
+    scope: step
+    verbs: [GET, POST, PATCH, DELETE]
+    meaning: "A read or write of sensitive material (a secret or credential)."
+  step.exec:
+    scope: step
+    verbs: []
+    meaning: "Code execution. Opaque by default; may be internally or externally scoped via properties."
+  step.gate:
+    scope: step
+    verbs: []
+    meaning: "A gate — a guardrail or human approval — recording a decision on the surrounding path."
+  step.unknown:
+    scope: step
+    verbs: []
+    meaning: "Catch-all for an action that could not be classified. To be treated as maximally risky."
+
+# --- Fields ------------------------------------------------------------------
+# The fields of a single emitted action, grouped by conceptual layer.
+# `required: conditional` and `only_on` capture the non-uniform cases.
+fields:
+  agent_id:
+    layer: positioning
+    required: true
+    meaning: "Stable identifier of the agent performing this action. A task may carry actions from several agents that share memory."
+  task_id:
+    layer: positioning
+    required: true
+    meaning: "The logical task — one shared-memory scope. Unique per run; groups every action of the task."
+  parent_task_id:
+    layer: positioning
+    required: false
+    only_on: [task.start]
+    meaning: "The task_id of the task that spawned this one."
+  action_id:
+    layer: positioning
+    required: false
+    meaning: "Identifier of one action; emitted on an intended record and repeated on the record that settles it (completed or denied)."
+  seq:
+    layer: positioning
+    required: false
+    meaning: "Sequence number within the task. Absent for an intended action; assigned when recorded."
+  timestamp:
+    layer: positioning
+    required: true
+    meaning: "When the harness emitted the action (ISO 8601)."
+  step_name:
+    layer: positioning
+    required: true
+    meaning: "Human-readable label for the action."
+  type:
+    layer: classification
+    required: true
+    meaning: "The action type; one of `action_types`."
+  verb:
+    layer: classification
+    required: conditional
+    condition: "Required iff the action's type declares a non-empty `verbs` list; absent otherwise."
+    meaning: "GET / POST / PATCH / DELETE."
+  aag_version:
+    layer: classification
+    required: false
+    only_on: [task.start]
+    meaning: "The AAG version the stream conforms to."
+  properties:
+    layer: content
+    required: false
+    meaning: "Nested contextual object (see `properties`). Open and extensible."
+  input:
+    layer: content
+    required: false
+    meaning: "The arguments to the action."
+  output:
+    layer: content
+    required: false
+    meaning: "The result of the action. For a step, an absent `output` marks an INTENDED action (pre-execution); a present one marks a COMPLETED action."
+
+# --- Properties --------------------------------------------------------------
+# No property is required and the set is OPEN. The AAG only *suggests* the
+# namespaces and leaves below so that recurring, security-relevant facts are
+# named consistently. A group is named only when it carries information the
+# action type does not already imply.
+properties:
+  required: false
+  open: true
+
+  # Cross-cutting groups.
+  groups:
+    target: "The resource an action reaches."
+    auth: "The authority an action runs under."
+    data: "The data an action handles."
+    agent: "Information about the agent itself (carried on task.start)."
+    counterpart: "Who is on the other end of a step.message."
+    transport: "Freeform: the mechanics of a call (protocol, latency, status codes). No defined leaves."
+    raw: "Freeform: the emitter's untranslated native record. No defined leaves."
+
+  # Suggested leaves. A dotted `path` sits under the group named by its prefix.
+  # `bare: true` with `scoped_to` is a leaf scoped by an action type, carried
+  # without a redundant group prefix.
+  suggested_leaves:
+    - path: target.host
+      meaning: "The concrete resource endpoint an action reaches."
+      examples: ["api.billing.com", "crm.internal"]
+    - path: target.trust
+      meaning: "Whether the resource sits inside or outside the organizational trust boundary."
+      values: [external, internal]
+    - path: auth.principal
+      meaning: "The identity under whose authority the action runs."
+      examples: ["svc-invoices", "user:j.vij"]
+    - path: auth.method
+      meaning: "How that authority was obtained."
+      examples: [oauth2, api_key, delegated]
+    - path: counterpart.kind
+      meaning: "Who is on the other end of a step.message."
+      values: [user, parent_agent, trigger]
+    - path: counterpart.trust
+      meaning: "The trust granted to that counterpart."
+      values: [trusted, untrusted]
+    - path: data.classification
+      meaning: "Sensitivity of the data the action handles. Open vocabulary."
+      examples: [pii, secret]
+    - path: agent.risk_classification
+      meaning: "EU AI Act risk tier the agent runs under."
+      values: [high, limited, minimal, unacceptable, unclassified]
+    - path: agent.purpose
+      meaning: "What the agent is for."
+      examples: ["answer customer billing questions"]
+    - path: agent.environment
+      meaning: "The deployment environment."
+      examples: [development, staging, production]
+    - path: agent.version
+      meaning: "Which revision of the agent ran — its prompt, config, or code version."
+      examples: ["2.3.1", "git:9f2ac1"]
+    - path: command
+      bare: true
+      scoped_to: step.exec
+      meaning: "The command a step.exec ran."
+      examples: ["git push", "rm -rf /"]
+    - path: provider
+      bare: true
+      scoped_to: step.model
+      meaning: "The model provider (for a step.model). Bare — the step.model type scopes it. Maps to OTel `gen_ai.system`."
+      examples: [openai, anthropic]
+    - path: model
+      bare: true
+      scoped_to: step.model
+      meaning: "The model identifier (for a step.model). Bare — the step.model type scopes it. Maps to OTel `gen_ai.request.model`."
+      examples: ["gpt-4o", "claude-sonnet-4-6"]
+    - path: kind
+      bare: true
+      scoped_to: step.gate
+      meaning: "Whether a step.gate was human approval or an automated check. (A gate's pass/deny decision is carried in the action's `output`, not a property.)"
+      values: [human, guardrail]

@@ -1,0 +1,11 @@
+# Dependencies for running the AAG helper scripts, validator, and tests.
+# Install with:  pip install -r requirements-dev.txt
+
+pyyaml>=6.0          # spec/generate.py reads vocabulary.yaml
+jsonschema>=4.18     # validate actions against spec/action.schema.json
+rfc3339-validator>=0.1  # enables jsonschema's date-time format check (timestamp)
+types-PyYAML>=6.0    # type stubs for `mypy --strict`
+types-jsonschema>=4.0  # type stubs for `mypy --strict`
+ruff                 # linting        (config in pyproject.toml)
+mypy                 # type checking  (config in pyproject.toml)
+pytest>=7.4          # test runner    (config in pyproject.toml)
