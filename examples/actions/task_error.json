@@ -1,0 +1,8 @@
+{
+  "agent_id": "support-assistant",
+  "task_id": "run-9f2ac1",
+  "seq": 8,
+  "timestamp": "2026-07-30T09:30:00Z",
+  "step_name": "halted_by_guard",
+  "type": "task.error"
+}

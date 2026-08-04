@@ -1,0 +1,11 @@
+{
+  "agent_id": "support-assistant",
+  "task_id": "run-9f2ac1",
+  "seq": 5,
+  "timestamp": "2026-07-30T09:14:25Z",
+  "step_name": "exfiltration_review",
+  "type": "step.gate",
+  "input": { "reviews": "outbound reply to the user", "checks": ["pii_exfiltration", "domain_allowlist"] },
+  "output": { "decision": "pass" },
+  "properties": { "kind": "guardrail" }
+}

@@ -1,0 +1,14 @@
+{
+  "agent_id": "support-assistant",
+  "task_id": "run-7b3d90",
+  "action_id": "act-51c2",
+  "timestamp": "2026-07-30T09:14:22Z",
+  "step_name": "get_customer_record",
+  "type": "step.resource",
+  "verb": "GET",
+  "input": { "customer_id": "C-4821" },
+  "properties": {
+    "target": { "trust": "internal", "host": "crm.internal.example.com" },
+    "data":   { "classification": "pii" }
+  }
+}

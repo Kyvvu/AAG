@@ -1,0 +1,25 @@
+# Tooling configuration for the Agent Action Grammar (AAG) repository.
+#
+# AAG is a specification, not a Python package: there is no importable module to
+# install. This file therefore carries only tool configuration (ruff, mypy,
+# pytest), so the helper scripts under spec/, validator/, and tests/ are linted,
+# type-checked, and tested with the same settings as the rest of the project.
+# The dependencies needed to run them live in requirements-dev.txt.
+
+[tool.ruff]
+target-version = "py310"
+line-length = 160
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.mypy]
+strict = true
+# spec/ and validator/ are scripts, not an installed package; let mypy (and the
+# tests) resolve `import generate` / `import validate` from those dirs.
+mypy_path = ["spec", "validator"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]

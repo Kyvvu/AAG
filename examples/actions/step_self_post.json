@@ -1,0 +1,12 @@
+{
+  "agent_id": "research-agent",
+  "task_id": "run-a7b8",
+  "seq": 6,
+  "timestamp": "2026-07-30T10:10:00Z",
+  "step_name": "save_finding_to_memory",
+  "type": "step.self",
+  "verb": "POST",
+  "input": { "note": "customer prefers email over phone" },
+  "output": { "status": "stored" },
+  "properties": { "data": { "classification": "pii" } }
+}

@@ -1,0 +1,10 @@
+{
+  "agent_id": "support-assistant",
+  "task_id": "run-9f2ac1",
+  "seq": 2,
+  "timestamp": "2026-07-30T09:14:22Z",
+  "step_name": "plan_next_step",
+  "type": "step.model",
+  "verb": "POST",
+  "output": { "text": "Look up the billing record for customer C-4821." }
+}

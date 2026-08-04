@@ -1,0 +1,14 @@
+{
+  "agent_id": "invoice-assistant",
+  "task_id": "run-2f1c",
+  "timestamp": "2026-07-30T09:14:22Z",
+  "step_name": "post_invoice",
+  "type": "step.resource",
+  "verb": "POST",
+  "input": { "invoice_id": "INV-2026-0917", "customer_id": "C-4821", "amount": 148.00, "currency": "EUR" },
+  "output": { "status": "created", "id": "inv_9f2a17" },
+  "properties": {
+    "target": { "trust": "external", "host": "api.billing.example.com" },
+    "data":   { "classification": "pii" }
+  }
+}
