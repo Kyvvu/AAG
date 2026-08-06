@@ -19,6 +19,8 @@ layer per harness on top. There is no shared word for "the agent read a secret"
 or "the agent messaged the user," so a single security policy cannot be written
 once and applied across a fleet of diverse agents. 
 
+> **This is a request for comments — the whole point is to hear back.** We're circulating RFC-0001 to gather reviews, remarks, and — we hope — contributors. If something here reads as wrong, incomplete, or hard to adopt in your own harness, that is exactly what we want to know. To weigh in, comment in the **[RFC-0001 feedback thread](https://github.com/Kyvvu/AAG/discussions/3)** — or anywhere in [GitHub Discussions](https://github.com/Kyvvu/AAG/discussions) — or open an [issue](https://github.com/Kyvvu/AAG/issues/new) referencing `RFC-0001`.
+
 ## The proposal
 
 The **Agent Action Grammar (AAG)** is a small, closed vocabulary for what an agent
@@ -134,7 +136,7 @@ Paths](https://arxiv.org/abs/2603.16586)*.)
 
 ## How to comment
 
-Comment via this repository's **GitHub Discussions**, or open an issue referencing
+Comment via this repository's **[GitHub Discussions](https://github.com/Kyvvu/AAG/discussions)**, or open an [issue](https://github.com/Kyvvu/AAG/issues/new) referencing
 `RFC-0001`. Feedback is most useful on:
 
 - whether the twelve types and their verb legality carve agent behaviour at the
