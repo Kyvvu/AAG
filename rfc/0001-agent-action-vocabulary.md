@@ -1,4 +1,4 @@
-# RFC-0001 — The Agent Action Grammar (v0.5.0)
+# RFC-0001 — Introducing the Agent Action Grammar
 
 > **Status:** Draft — open for comment.
 > **Full specification:** [`../docs/model.md`](../docs/model.md) · **Machine-readable:** [`../spec/vocabulary.yaml`](../spec/vocabulary.yaml)
@@ -11,14 +11,13 @@ enumerate — you cannot know ahead of time what an agent will do. Individual
 actions are already guarded: access control, isolation, content guardrails. What
 is *not* guarded is the **path** — the order in which individually-permitted
 actions are strung together. A read here, a send there; each fine on its own, the
-combination a leak that no single step reveals. **The object worth securing is
-the path, not the isolated action.**
+combination a leak that no single step reveals.
 
-But every framework and model describes that path in its own shapes — OpenAI
+However, every framework and model describes that path in its own shapes — OpenAI
 `tool_calls`, Anthropic `tool_use` blocks, Gemini `functionCall`, and a further
 layer per harness on top. There is no shared word for "the agent read a secret"
 or "the agent messaged the user," so a single security policy cannot be written
-once and applied across a fleet of diverse agents.
+once and applied across a fleet of diverse agents. 
 
 ## The proposal
 
@@ -28,16 +27,19 @@ can reason over agent behaviour uniformly — whatever the framework, model, or
 vendor.
 
 AAG **describes**; it does not **enforce**. It is the alphabet that security
-policies are written against — not the policies themselves. (It is to
-agent security what OpenTelemetry's semantic conventions are to observability.)
+policies can be written against — not the policies themselves. However, using
+the concept of *intended* actions, it is deliberately designed to facilitate
+real-time security policies that intervene in an agent's path at runtime.
 
-An agent's work is a **task**: it opens with `task.start`, runs a stream of steps,
-and closes with `task.end`. Every record — lifecycle marker or step — is an
-**action**.
+The AAG considers an agent's work to be composed of multiple tasks. 
+A new **task**, which is the boundary between data in memory, opens with
+`task.start`, runs a stream of steps, and closes with `task.end`. 
+
+Every record — lifecycle marker or `step` — is an **action**.
 
 ## The vocabulary
 
-### Action types — twelve, closed
+### Action types: security meaningful action classifications
 
 | type | what it is |
 |------|-----------|
@@ -52,7 +54,7 @@ and closes with `task.end`. Every record — lifecycle marker or step — is an
 | `step.gate` | a guardrail or a human approval |
 | `step.unknown` | an action that could not be classified |
 
-### Verbs — data-flow, not HTTP
+### Verbs: data flow to and from the agent
 
 A step carries a **verb**, read as the *direction of data*, not the transport
 method:
@@ -64,9 +66,16 @@ method:
 | `PATCH` | external state is modified |
 | `DELETE` | external state is removed |
 
-So a `GET` that smuggles data outward through a large query string is, in AAG, a
+So a `GET` that smuggles data outward through a large query string should, in AAG, be a
 `POST`. Some types take no verb: `step.model` is both a source and a sink;
 `step.exec`, `step.gate`, and all `task.*` carry none.
+
+### Properties
+
+Beyond type and verb, an action carries an open `properties` tree. None are
+required; AAG *suggests* the recurring, security-relevant ones — `target.trust`,
+`target.host`, `data.classification`, `counterpart.*`, `agent.*` — so they are
+named the same way everywhere.
 
 ### Anatomy of an action
 
@@ -76,11 +85,14 @@ An action is one JSON object in three layers:
 - **classification** — `type`, and (where the type takes one) `verb`;
 - **content** — `properties` (the security-relevant metadata), `input`, `output`.
 
-The move that distinguishes AAG: **an action with no `output` is *intended*** —
+One of the core features of the AAG is the notion of an intended action: **an action with no `output` is *intended*** —
 described *before* it executes, so a security layer can allow or deny it before
-any effect. An action *with* an `output` is *completed*. This pre-execution object
-is exactly what an observability span — a record of something that already
-happened — cannot represent.
+any effect. An action *with* an `output` is considered *completed*. 
+
+The pre-execution object, the intended action, is exactly what an observability span — a record of something that already
+happened — cannot (and should not) represent.
+
+Here is a simple example of an AAG formatted *intended* action as it can be emitted by an agent harness:
 
 ```json
 { "agent_id": "support-assistant", "task_id": "run-9f2ac1", "seq": 3,
@@ -90,41 +102,34 @@ happened — cannot represent.
                   "data": { "classification": "pii" } } }
 ```
 
-A policy reads that in one line: an *internal* read that pulled *pii* into the
-task. Follow it, later in the same task, with a `step.resource POST` to an
-*external* host, and you have the exfiltration path AAG exists to make visible.
+A policy could read that in one line to mean an *internal* read that pulled *pii* into the
+task. If, later in the same task, it is followed by a `step.resource POST` to an
+*external* host, you have an exfiltration path that the AAG exists to make actionable.
 
 ### The memory model
 
 Within one task, any data a step reads is assumed available to every later step;
 a new task starts from a blank slate. That single assumption is what lets a policy
 reason about the whole *path* — a source, then a sink — rather than isolated
-steps. (The formal argument is in *Runtime Governance for AI Agents: Policies on
-Paths*.)
-
-### Properties
-
-Beyond type and verb, an action carries an open `properties` tree. None are
-required; AAG *suggests* the recurring, security-relevant ones — `target.trust`,
-`target.host`, `data.classification`, `counterpart.*`, `agent.*` — so they are
-named the same way everywhere.
+steps. (A more formal argument is in *[Runtime Governance for AI Agents: Policies on
+Paths](https://arxiv.org/abs/2603.16586)*.)
 
 ## What AAG is not
 
 - **Not an engine.** No policies, no rules, no enforcement — that is a policy
-  engine's job.
-- **Not observability.** It composes with OpenTelemetry (an
-  [OTLP mapping](../docs/otlp-mapping.md) is provided) but adds the two things a
-  span cannot carry: a *closed* vocabulary and the *intended* action.
+  engine's job. It's just a language describing what an agent is doing as it goes.
+- **Not observability.** It maps cleanly to OpenTelemetry (an
+  [OTLP mapping](../docs/otlp-mapping.md) is provided) but adds two things a
+  span cannot carry: a *closed* vocabulary and the *intended* action jargon.
 
 ## Nearby efforts
 
-- **OpenTelemetry's GenAI conventions**, and **OWASP AOS** / the **Agent Control
-  Standard (ACS)** that extend OpenTelemetry and OCSF, are observability schemas
+- **[OpenTelemetry's GenAI conventions](https://github.com/open-telemetry/semantic-conventions-genai)**, and **[OWASP AOS](https://owasp.org/www-project-agent-observability-standard-2/)** / the **[Agent Control
+  Standard (ACS)](https://agentcontrolstandard.org/)** that extend OpenTelemetry and OCSF, are observability schemas
   with an open surface. None defines a closed action enumeration, an
   intended/completed distinction, or a task-memory model — the parts a security
   policy is written against.
-- **AGNTCY's OASF** describes what an agent *is* (capabilities, metadata); AAG
+- **[AGNTCY's OASF](https://docs.agntcy.org/oasf/open-agentic-schema-framework/)** describes what an agent *is* (capabilities, metadata); AAG
   describes what it *did*. The two are complementary.
 
 ## How to comment
@@ -147,7 +152,7 @@ direction.
 
 ### Fixed properties
 
-Should any properties be reserved, fixed, or required? Today none are — the property tree is entirely open (see `model.md` §2.4), which maximizes adoption but means two emitters can describe the same situation with different keys. **Preferred direction:** keep properties open while the standard is young and, as usage converges, promote a small number of load-bearing leaves (for example `target.trust` and `data.classification`) from *suggested* to *required for the action types where they are meaningful*. Freezing too early risks standardizing the wrong vocabulary; freezing too late risks fragmentation. The trigger for pinning a property should be evidence that it is widely emitted and relied upon — not a guess made now.
+Should any properties be reserved, fixed, or required? Today none are — the property tree is entirely open (see `model.md` §2.4), which maximizes adoption but means two emitters can describe the same situation with different keys. **Preferred direction:** keep properties open while the standard is young and, as usage converges, promote a few leaves (for example `target.trust` and `data.classification`) from *suggested* to *required for the action types where they are meaningful*. Freezing too early risks standardizing the wrong vocabulary; freezing too late risks fragmentation. The trigger for pinning a property should be evidence that it is widely emitted and relied upon — not a guess made now.
 
 ### Input / output granularity
 
