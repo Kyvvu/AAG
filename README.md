@@ -1,8 +1,23 @@
-# Agent Action Grammar (AAG)
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/aag-logo-dark.svg">
+    <img src="assets/aag-logo-light.svg" alt="Agent Action Grammar (AAG)" width="360">
+  </picture>
+</p>
 
-**A small, open, versioned vocabulary for describing what an AI agent is actually doing.**
+<p align="center">
+  <strong>A small, open, versioned vocabulary for describing what an AI agent is actually doing.</strong>
+</p>
 
-The AAG aims at providing a standardized way of depicting actions an agent takes within a task while carrying out its task. Every action carries
+<p align="center">
+  <a href="https://github.com/Kyvvu/AAG/actions/workflows/ci.yml"><img src="https://github.com/Kyvvu/AAG/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
+  <a href="rfc/0001-agent-action-vocabulary.md"><img src="https://img.shields.io/badge/RFC--0001-open%20for%20comment-6366f1" alt="RFC-0001: open for comment"></a>
+  <img src="https://img.shields.io/badge/version-0.5.0%20draft-8b5cf6" alt="Version 0.5.0 (draft)">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/spec-CC%20BY%204.0-64748b" alt="Spec licensed CC BY 4.0"></a>
+  <a href="LICENSE-CODE"><img src="https://img.shields.io/badge/code-Apache%202.0-64748b" alt="Code licensed Apache-2.0"></a>
+</p>
+
+The AAG is a standard way to describe the actions an agent takes while carrying out a task. Every action carries
 
 * a **type** (`task.start`, `step.resource`, `step.message`, …), 
 * a **verb** where one applies (`GET`/`POST`/`PATCH`/`DELETE`, read as whether data enters or leaves the task — not as an HTTP method), and 
@@ -10,13 +25,11 @@ The AAG aims at providing a standardized way of depicting actions an agent takes
 
 Jointly these actions describe the full *path* an agent takes and provide the input for security relevant rules / policies that allow us to control what an agent actually does.
 
-> **Status:** Draft `v0.5.0` · open for comment via [RFC-0001](rfc/0001-agent-action-vocabulary.md).
-
 ---
 
 ## Why a shared vocabulary
 
-AAG's purpose is agent **security**: if every agent harness — whatever the framework, model, or vendor — emits its actions in this vocabulary, those actions can be secured uniformly — reasoned about and controlled by any security tool that understands the vocabulary, rather than one built for a specific stack. The same uniform stream also trivially feeds into (existing) observability and governance systems (see [`docs/otlp-mapping.md`](docs/otlp-mapping.md)), but security is the aim of the AAG itself.
+AAG's purpose is agent **security**: if every agent harness — whatever the framework, model, or vendor — emits its actions in this vocabulary, those actions can be secured uniformly — reasoned about and controlled by any security tool that understands the vocabulary, rather than one built for a specific stack. The same uniform stream can also feed into existing observability and governance systems (see [`docs/otlp-mapping.md`](docs/otlp-mapping.md)), but security is the aim of the AAG itself.
 
 The AAG was created for two reasons:
 
@@ -36,7 +49,7 @@ AAG gives those behaviours one name each, so that:
 The AAG is a grammar, not a security engine. This means that:
 
 - It defines what an agent action *is* — a closed set of action types and verbs, plus an open, namespaced tree of properties.
-- It does **not** define whether an action is *allowed*. No policies, no rules, no data-exfiltration checks, no enforcement. That would be the job of a policy engine, and is out of scope here (however, it's quite explicitly the type of application the AAG universally facilitates).
+- It does **not** define whether an action is *allowed*. No policies, no rules, no data-exfiltration checks, no enforcement. That would be the job of a policy engine, and is out of scope here (though it's exactly the kind of application the AAG is meant to make possible).
 
 Thus, in its bare essence, the AAG is designed to allow building more secure agents. The closed vocabulary provided by the AAG is an alphabet that security policies and rules can be written against — the AAG supplies the words; an engine can do policing, uniformly, across agents. 
 
