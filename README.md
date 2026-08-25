@@ -20,7 +20,7 @@
 
 The AAG is a standard way to describe the actions an agent takes while carrying out a task. Every action carries
 
-* a **type** (`task.start`, `step.resource`, `step.message`, …), 
+* a **type** (`step.task_start`, `step.resource`, `step.message`, …), 
 * a **verb** where one applies (`GET`/`POST`/`PATCH`/`DELETE`, read as whether data enters or leaves the task — not as an HTTP method), and 
 * a tree of **`properties`** (`data.classification`, `target.host`, …). AAG fixes these so any tool, framework, or platform describes what an agent does in the same terms.
 
@@ -82,7 +82,7 @@ The AAG is composed of two main layers:
 
    | type              | verbs                  | meaning (abridged)                          |
    |-------------------|------------------------|---------------------------------------------|
-   | `task.start`      | —                      | a task run begins                           |
+   | `step.task_start`      | —                      | a task run begins                           |
    | `step.resource`   | GET/POST/PATCH/DELETE  | read or write a resource                    |
    | `step.message`    | GET/POST               | receive from / send to whoever the agent is interacting with |
    | `step.model`      | —                      | invoke a model                              |

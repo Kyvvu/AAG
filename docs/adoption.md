@@ -17,19 +17,19 @@ In AAG, *each of those steps is an action* — so those two hooks are all you ne
 
 Bracket the run with the task lifecycle, and you have a complete task as described in [`model.md`](model.md) §2.5:
 
-`task.start` → the stream of step actions → `task.end`.
+`step.task_start` → the stream of step actions → `step.task_end`.
 
 Below we describe the implementation of an AAG-conformant emitter step by step:
 
 ## Step 1 — open the task
 
-Emit a `task.start`. Give the run a `task_id`, unique per run — it is the
+Emit a `step.task_start`. Give the run a `task_id`, unique per run — it is the
 shared-memory scope ([`model.md`](model.md) §3.1). Carry what you know about the
 agent in the `agent` group:
 
 ```json
 { "agent_id": "…", "task_id": "run-…", "timestamp": "…", "step_name": "…",
-  "type": "task.start", "aag_version": "0.5.0",
+  "type": "step.task_start", "aag_version": "0.5.0",
   "properties": { "agent": { "risk_classification": "…", "purpose": "…", "environment": "…" } } }
 ```
 
@@ -85,7 +85,7 @@ a completed action — put the error in `output` ([`model.md`](model.md) §2.5):
 
 ## Step 5 — close the task
 
-Emit `task.end` to close the task normally. Use `task.error` if the run terminated abnormally, or `task.idle` if it paused awaiting input — either may be followed by further actions and a later `task.end` (see [`model.md`](model.md) §2.1).
+Emit `step.task_end` to close the task normally. Use `step.task_error` if the run terminated abnormally, or `step.task_idle` if it paused awaiting input — either may be followed by further actions and a later `step.task_end` (see [`model.md`](model.md) §2.1).
 
 ## Properties carry the security meaning
 
@@ -106,7 +106,7 @@ failure.
 
 | LangChain event | AAG action | phase |
 |-----------------|------------|-------|
-| `on_chain_start` (top-level run) | `task.start` | lifecycle |
+| `on_chain_start` (top-level run) | `step.task_start` | lifecycle |
 | run input — the incoming human message | `step.message` `GET` | completed |
 | `on_chat_model_start` / `on_llm_start` | `step.model` | intended |
 | `on_llm_end` | `step.model` | completed |
@@ -119,8 +119,8 @@ failure.
 | `on_retriever_end` | `step.resource` `GET` | completed |
 | `on_retriever_error` | `step.resource` `GET` | completed (error `output`) |
 | `on_agent_finish` — the final response to the user | `step.message` `POST` | intended → completed |
-| `on_chain_end` (top-level run) | `task.end` | lifecycle |
-| `on_chain_error` (top-level run) | `task.error` | lifecycle |
+| `on_chain_end` (top-level run) | `step.task_end` | lifecycle |
+| `on_chain_error` (top-level run) | `step.task_error` | lifecycle |
 | `on_llm_new_token`, `on_text`, `on_retry`, nested `on_chain_*` | — | no new action |
 
 A few things the mapping, not the callback, decides:

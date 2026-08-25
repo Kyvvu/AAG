@@ -18,18 +18,15 @@ name: "Agent Action Grammar"
 license: "CC-BY-4.0"
 spec: "../docs/model.md"
 
-# --- Granularity (derived) ---------------------------------------------------
-# `granularity` is NOT an independent axis of the vocabulary. It is a projection
-# of the action-type namespace: read it off the segment before the first '.' of
-# the action `type` (`task.*` -> task, `step.*` -> step). It is therefore never
-# carried as a field on an emitted action, and it is not restated on each entry
-# in `action_types` below — that would duplicate the prefix and allow the two to
-# disagree. Consumers that want to group actions by granularity derive it.
-granularity:
-  derived: true
-  derived_from: type
-  rule: "The segment of the action `type` before the first '.'."
-  values: [task, step]
+# --- Namespace ---------------------------------------------------------------
+# Every action `type` lives in the `step.` namespace. Four of the twelve mark
+# the boundaries of a task (`step.task_start`, `step.task_end`,
+# `step.task_error`, `step.task_idle`); the rest describe action within one.
+#
+# Earlier drafts carried a `granularity` axis with values [task, step], derived
+# by reading the segment before the first '.'. It is removed: with a single
+# namespace the projection is constant, so it classified nothing. Consumers
+# that need to separate task boundaries from actions match the four type names.
 
 # --- Verbs -------------------------------------------------------------------
 # A verb records the DATA-FLOW intent of a step, not the HTTP method a tool
@@ -49,21 +46,21 @@ verbs:
 # (type, verb) pairs is exactly each type crossed with its listed verbs.
 action_types:
 
-  # Task lifecycle (granularity `task`, derived from the prefix; no verb)
-  task.start:
+  # Task boundaries (no verb)
+  step.task_start:
     verbs: []
     meaning: "Opens a task; establishes a fresh memory scope, nothing carried from prior tasks. May carry agent context (see properties)."
-  task.end:
+  step.task_end:
     verbs: []
     meaning: "Closes a task; the memory scope ends. Nothing implicitly survives into another task."
-  task.error:
+  step.task_error:
     verbs: []
     meaning: "The task reached an abnormal state. A lifecycle marker; the task may resume afterwards."
-  task.idle:
+  step.task_idle:
     verbs: []
     meaning: "The task is paused (e.g. awaiting input). Memory persists across the idle period."
 
-  # Steps (granularity `step`, derived from the prefix)
+  # Actions within a task
   step.resource:
     verbs: [GET, POST, PATCH, DELETE]
     meaning: "A call to a resource or tool outside the agent. GET reads; POST/PATCH/DELETE write. The general workhorse."
@@ -104,7 +101,7 @@ fields:
   parent_task_id:
     layer: positioning
     required: false
-    only_on: [task.start]
+    only_on: [step.task_start]
     meaning: "The task_id of the task that spawned this one."
   action_id:
     layer: positioning
@@ -134,7 +131,7 @@ fields:
   aag_version:
     layer: classification
     required: false
-    only_on: [task.start]
+    only_on: [step.task_start]
     meaning: "The AAG version the stream conforms to."
   properties:
     layer: content
@@ -163,7 +160,7 @@ properties:
     target: "The resource an action reaches."
     auth: "The authority an action runs under."
     data: "The data an action handles."
-    agent: "Information about the agent itself (carried on task.start)."
+    agent: "Information about the agent itself (carried on step.task_start)."
     counterpart: "Who is on the other end of a step.message."
     transport: "Freeform: the mechanics of a call (protocol, latency, status codes). No defined leaves."
     raw: "Freeform: the emitter's untranslated native record. No defined leaves."

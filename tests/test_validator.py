@@ -77,22 +77,22 @@ def test_task_mixed_task_id_is_error() -> None:
 
 
 def test_task_out_of_order_seq_warns() -> None:
-    _, warnings = validate.validate_task([_act(type="task.start", seq=1), _act(seq=0)])
+    _, warnings = validate.validate_task([_act(type="step.task_start", seq=1), _act(seq=0)])
     assert any("non-decreasing" in w for w in warnings)
 
 
 def test_task_missing_start_warns() -> None:
     _, warnings = validate.validate_task([_act(type="step.exec")])
-    assert any("does not begin with task.start" in w for w in warnings)
+    assert any("does not begin with step.task_start" in w for w in warnings)
 
 
 def test_task_end_not_last_warns() -> None:
-    _, warnings = validate.validate_task([_act(type="task.start"), _act(type="task.end"), _act()])
+    _, warnings = validate.validate_task([_act(type="step.task_start"), _act(type="step.task_end"), _act()])
     assert any("not the last action" in w for w in warnings)
 
 
 def test_clean_task_has_no_issues() -> None:
-    actions = [_act(type="task.start", seq=0), _act(seq=1), _act(type="task.end", seq=2)]
+    actions = [_act(type="step.task_start", seq=0), _act(seq=1), _act(type="step.task_end", seq=2)]
     errors, warnings = validate.validate_task(actions)
     assert errors == []
     assert warnings == []
