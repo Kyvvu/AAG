@@ -6,6 +6,25 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Granularity replaces "scope" and is now explicitly derived.** The task-vs-step
+  distinction is named **granularity** (values `task` / `step`, unchanged) and is
+  documented as a projection of the action-type namespace — read off the `type`
+  prefix — rather than an axis of the vocabulary in its own right.
+
+### Removed
+
+- **The top-level `scopes: [task, step]` enumeration** in
+  [`spec/vocabulary.yaml`](spec/vocabulary.yaml), replaced by a `granularity`
+  block that states the derivation rule alongside the two values.
+- **The per-action-type `scope: task` / `scope: step` field.** It restated the
+  type prefix and could only ever agree with it, so it was removed rather than
+  renamed; the generator now rejects a source that carries it. The `(type, verb)`
+  legality table is unchanged — granularity never separated a pair, which is the
+  evidence it carried no information of its own. No emitted action ever carried
+  the field, so the wire format is unaffected.
+
 ## [0.5.0] — draft
 
 The first drafted version of the AAG, open for comment via

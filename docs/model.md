@@ -32,6 +32,8 @@ One point of vocabulary, since it recurs throughout: we use **action** as the ge
 
 The AAG consists of twelve action types: four `task.*` lifecycle types and eight `step.*` types which describe agent behavior within a task. Any `(type, verb)` pair not listed in the tables below is malformed and not a part of the AAG.
 
+**Granularity is derived, not declared.** Whether an action is task-level or step-level — its **granularity** — is read off the `type` prefix: the segment before the first `.` (`task.*` → `task`, `step.*` → `step`). It is not an independent axis of the vocabulary and never appears as a field on an emitted action; it is a projection of the type namespace, and a consumer that wants to group actions by granularity derives it. Note that the legality tables above are keyed on `(type, verb)` alone: adding granularity as a third key would not separate a single pair, which is precisely why it is not an axis. (Earlier drafts carried it as a `scope` field on each action type; it was removed as redundant with the prefix.)
+
 #### Task lifecycle (`task.*`, no verb)
 
 | type         | meaning & security implication                                                                                  |
