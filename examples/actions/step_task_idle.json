@@ -4,5 +4,5 @@
   "seq": 3,
   "timestamp": "2026-07-30T09:20:00Z",
   "step_name": "await_user_clarification",
-  "type": "task.idle"
+  "type": "step.task_idle"
 }

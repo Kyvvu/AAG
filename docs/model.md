@@ -8,15 +8,15 @@ It is useful to keep the purpose of the AAG in mind when reading. The AAG is a u
 
 > Note that we assume agent *harness*(es) to emit the actions specified by the AAG, not the LLM(s) that drives the harness. Clearly, it would be beneficial if the action plan emitted by an LLM also simply emitted AAG-structured actions. However, for the sake of agent security we deem the LLM(s) to be untrusted sources of data in this context (the LLM emits a plan, it does not note what actually happened). The harness, the software that actually executes the actions, should be the prime source of AAG actions.
 
-The general structure the AAG describes for handling an agent carrying out a task is conceptually simple: an agent starts a task (and emits a `task.start` action), next, the agent carries out multiple steps (`step.xxx` actions) which each have a meaningful `type`, `verb`, and `properties`, and keeps submitting steps until the task ends. A few intricacies are however good to keep in mind when reading:
+The general structure the AAG describes for handling an agent carrying out a task is conceptually simple: an agent starts a task (and emits a `step.task_start` action), carries out behavioral steps such as `step.model` and `step.resource`, and keeps submitting actions until the task ends. A few intricacies are however good to keep in mind when reading:
 
 1. The AAG provides semantics for what the agent does. The `type` and `verb` carry the baseline meaning of an action; the `properties` are where an emitter, building an agent for a specific purpose, adds the semantics that elaborate security policies and rules are written against.
 2. The AAG is explicitly designed to reason in a security-relevant way over *tasks*: a task is the unit within which the agent's memory — and therefore the data available to it — is assumed to accumulate. This memory model (§3.1) is what makes the task the right boundary, and it drives how sub-agents and multi-agent systems are handled (see §3.4).
-3. The AAG is intentionally designed to adapt to the currently quite common convention in agent harnesses to implement hooks that allow for checking conditions *prior to* and *after* executing the action. The AAG facilitates this use by the simple idea that each `step.xxx` action is conceptually composed of a triplet: {metadata, arguments, result} — which in a record are the `properties`, `input`, and `output` fields. When the result (`output`) is void, we read this as the "intended" action — which is what lets a security layer restrict an agent before it acts, rather than only recording what it did.
+3. The AAG is intentionally designed to adapt to the currently quite common convention in agent harnesses to implement hooks that allow for checking conditions *prior to* and *after* executing the action. The AAG facilitates this use by the simple idea that each behavioral step is conceptually composed of a triplet: {metadata, arguments, result} — which in a record are the `properties`, `input`, and `output` fields. When the result (`output`) is void, we read this as the "intended" action — which is what lets a security layer restrict an agent before it acts, rather than only recording what it did.
 
 Thus, the AAG describes a uniform way of describing what an agent is doing — what actions it is taking — *as it is carrying out a task*. The AAG explicitly does not cover any methods of *securing* based on this description; security policies and rules can be built once the AAG is adopted, and for now we leave that to others. We are solely concerned with having a unified, meaningful (for agent security) *description* of what an agent does as it is pursuing its task.
 
-One point of vocabulary, since it recurs throughout: we use **action** as the general term for any record a harness emits — both the `task.*` lifecycle markers and the `step.*` behaviors are thus "actions" in our writing here. However, we use **step** specifically for a `step.*` action. A `task.start` is therefore an action but not a step, and the triplet of point 3 above applies to steps, not to task markers.
+One point of vocabulary, since it recurs throughout: we use **action** as the general term for any record a harness emits — both the four `step.task_*` lifecycle markers and the eight behavioral types are thus "actions" in our writing here. However, we use **step** specifically for a behavioral action — one of the eight types that is not a lifecycle marker. A `step.task_start` is therefore an action but not a step, and the triplet of point 3 above applies to steps, not to task markers.
 
 ### The structure of this document
 
@@ -30,18 +30,18 @@ One point of vocabulary, since it recurs throughout: we use **action** as the ge
 
 ### 2.1 Action types
 
-The AAG consists of twelve action types: four `task.*` lifecycle types and eight `step.*` types which describe agent behavior within a task. Any `(type, verb)` pair not listed in the tables below is malformed and not a part of the AAG.
+All twelve action types live under `step.*`. Four are task-lifecycle types — `step.task_start`, `step.task_end`, `step.task_error`, and `step.task_idle` — and the other eight describe agent behavior within a task. The tables below define the legal `(type, verb)` combinations; any combination not listed is malformed.
 
-#### Task lifecycle (`task.*`, no verb)
+#### Task lifecycle (`step.task_*`, no verb)
 
 | type         | meaning & security implication                                                                                  |
 |--------------|----------------------------------------------------------------------------------------------------------------|
-| `task.start` | Opens a task. Establishes a fresh memory scope — nothing is carried from prior tasks. May carry agent, task, or organizational context (§2.4): e.g. the agent's risk tier, purpose, and environment. |
-| `task.end`   | Closes a task. The task's memory scope ends; nothing *implicitly* survives into another task.                                |
-| `task.error` | The task terminated abnormally. Marks an incomplete path — may indicate a blocked or failed step. The task may resume after an error.               |
-| `task.idle`  | The task is paused (e.g. awaiting input). Memory is assumed to persist across the idle period — the agent is still on the same task. There is no explicit resume marker: the next action on the task signals resumption (the same holds after `task.error`).    |
+| `step.task_start` | Opens a task. Establishes a fresh memory scope — nothing is carried from prior tasks. May carry agent, task, or organizational context (§2.4): e.g. the agent's risk tier, purpose, and environment. |
+| `step.task_end`   | Closes a task. The task's memory scope ends; nothing *implicitly* survives into another task.                                |
+| `step.task_error` | The task reached an abnormal state. It may indicate a blocked or failed step, and the task may resume afterwards.               |
+| `step.task_idle`  | The task is paused (e.g. awaiting input). Memory is assumed to persist across the idle period — the agent is still on the same task. There is no explicit resume marker: the next action on the task signals resumption (the same holds after `step.task_error`).    |
 
-#### Steps (`step.*`)
+#### Behavioral steps
 
 | type              | verbs                    | meaning                                                                                                    |
 |-------------------|--------------------------|-----------------------------------------------------------------------------------------------------------|
@@ -60,13 +60,13 @@ Some harnesses reach many tools through a single connection — an MCP server, f
 
 ### 2.2 Anatomy of an action
 
-As stated, an agent carries out a task (`task.start`), runs through multiple actions (i.e., `step.message` to get user input, `step.model` to generate a response, etc.) until task completion (`task.end`).
+As stated, an agent carries out a task (`step.task_start`), runs through multiple actions (i.e., `step.message` to get user input, `step.model` to generate a response, etc.) until task completion (`step.task_end`).
 
 Every *individual* action a harness emits has three conceptual layers:
 
 - **Positioning** — where the action sits in the stream, so records from different harnesses can be grouped and ordered: `agent_id`, `task_id`, `seq`, `timestamp`, and the human-readable label `step_name`.
-- **Classification** — *what kind* of action it is: its `type` (§2.1), and — for `step.x` types that take one — a `verb` (§2.3).
-- **Content** — the aforementioned triplet {metadata, arguments, result} = {`properties`, `input`, `output`}. For a `step.x`, an absent `output` is interpreted to signal an **intended** action (pre-execution). When `output` is present the action is deemed **completed**. 
+- **Classification** — *what kind* of action it is: its `type` (§2.1), and — for action types that take one — a `verb` (§2.3).
+- **Content** — the aforementioned triplet {metadata, arguments, result} = {`properties`, `input`, `output`}. For a behavioral step, an absent `output` signals an **intended** action (pre-execution). When `output` is present the action is **completed**. 
 
 The following fields are explicitly part of the AAG:
 
@@ -74,22 +74,26 @@ The following fields are explicitly part of the AAG:
 |----------------|---------------------|----------|-------------------------------------------------------------------------------------------|
 | positioning    | `agent_id`          | ✅       | Stable identifier of the agent performing *this action*. A single task may contain actions from more than one agent when they share memory (§3.4). |
 | positioning    | `task_id`           | ✅       | The logical task — one shared-memory scope. Unique per run; groups every action of the task, the unit reasoned over (§3.1). A task may span several agents that share memory (§3.4). |
-| positioning    | `parent_task_id`    | ❌       | On `task.start` only: the `task_id` of the task that spawned this one (§3.4).              |
+| positioning    | `parent_task_id`    | ❌       | On `step.task_start` only: the `task_id` of the task that spawned this one (§3.4).              |
 | positioning    | `action_id`         | ❌       | Identifier of one action. Emitted on an intended record and repeated on the record that settles it — completed or denied — so the two can be tied together. (How denials are recorded is an open question — see the [RFC](../rfc/0001-agent-action-vocabulary.md).) |
 | positioning    | `seq`               | ❌       | Sequence number within the task. Absent for an intended action; assigned when recorded.    |
 | positioning    | `timestamp`         | ✅       | When the harness emitted the action.                                                       |
 | positioning    | `step_name`         | ✅       | Human-readable label (`"post_invoice"`, `"chat_gpt-4o"`).                                  |
 | classification | `type`              | ✅       | The action type — one of the twelve in §2.1.                                               |
 | classification | `verb`              | ⚠️※     | `GET` / `POST` / `PATCH` / `DELETE`. See §2.3. ※ Required only for step types that take a verb; absent for all others. |
-| classification | `aag_version`       | ❌       | On `task.start` only: the AAG version the stream conforms to. (Out-of-band version negotiation is discussed in the [RFC](../rfc/0001-agent-action-vocabulary.md).) |
+| classification | `aag_version`       | ❌       | On `step.task_start` only: the AAG version the stream conforms to. (Out-of-band version negotiation is discussed in the [RFC](../rfc/0001-agent-action-vocabulary.md).) |
 | content        | `properties`        | ❌       | Nested contextual object — the metadata that gives the action its security meaning (§2.4).  |
 | content        | `input`             | ❌       | The arguments to the action.                                                              |
 | content        | `output`            | ❌       | The result of the action. Absent ⇒ *intended* (steps only).                                |
 
-Please note that **task and step actions are not symmetric.** 
+**Lifecycle markers and behavioral steps are not symmetric** in how they use the content layer:
 
-* A `task.*` action — a lifecycle marker such as `task.start` — carries positioning, a `type`, and *context* properties (§2.4). It has no `verb`, and neither the `input` (arguments) nor `output` (result) of the triplet: only its metadata (`properties`) is present. Also, most `agent.` properties (see below) will be part of a `task.*` action, not an individual `step.*`.
-* A `step.*` action carries the full triplet. The intended/completed distinction therefore applies to **steps only**: a `task.start` with no `output` is not an "intended" action, it is a lifecycle marker.
+* A lifecycle marker — `step.task_start`, `step.task_end`, `step.task_error`, or `step.task_idle` — carries positioning fields, a `type`, and *context* properties (§2.4). It takes no `verb`, and neither the `input` (arguments) nor the `output` (result) of the triplet: only its metadata (`properties`) is present. Most `agent.*` properties (see below) belong on `step.task_start` rather than on an individual behavioral step.
+* A behavioral step — any of the other eight types — carries the full triplet. The intended/completed distinction therefore applies to **behavioral steps only**: a `step.task_start` with no `output` is not an "intended" action, it is a lifecycle marker.
+
+> Note for implementers: `action.schema.json` does not currently reject an
+> `input` or `output` on a lifecycle marker. The prose above is normative; the
+> generated schema is a partial check of it.
 
 ### 2.3 Verbs
 
@@ -144,7 +148,7 @@ Based on our current use of the AAG, we *suggest* the following properties:
 
 A few notes:
 
-* The `agent.*` properties describe the *agent*, not an individual step, so they are carried once on `task.start` rather than repeated on every action.
+* The `agent.*` properties describe the *agent*, not an individual step, so they are carried once on `step.task_start` rather than repeated on every action.
 * `data.classification` is deliberately an **open** vocabulary: organizations have their own labels, and a fixed sensitivity set would be wrong for almost everyone. The same holds for the property tree as a whole — the AAG names what recurs, and leaves the rest open.
 * There are two distinct `kind` leaves: the bare `kind` on a `step.gate` (`human` / `guardrail`) and `counterpart.kind` on a `step.message` (`user` / `parent_agent` / `trigger`). They never collide — one is bare (scoped by `step.gate`), the other is grouped — but they are different vocabularies; do not unify them.
 
@@ -200,9 +204,9 @@ The same action, submitted *before* execution by a pre-execution hook, simply om
 }
 ```
 
-A note on failure. **(1) A step that fails to execute** — the tool threw, a request timed out — is still a *completed* step: its `output` records the failure (e.g. `{"status": "error"}`). There is no step-level error type; the triplet already expresses it. **(2) `task.error`** is a lifecycle marker for the *task* reaching an abnormal state — an unrecoverable harness fault, or a halt — not tied to any one step; the task may resume afterwards, so a log can contain a `task.error` followed by further steps. **(3) An action blocked by a rule or policy** is a third case, and one the AAG does not itself represent — the AAG describes behaviour, it does not enforce. When an engine blocks an *intended* action (a `step.x` that never gains an `output`), the block may surface as a `task.error` if it halts the task, or as the intended action re-emitted with a denial `output`. Exactly how a block is recorded is left to the [RFC](../rfc/0001-agent-action-vocabulary.md) (see *Recording blocked actions*).
+A note on failure. **(1) A step that fails to execute** — the tool threw, a request timed out — is still a *completed* step: its `output` records the failure (e.g. `{"status": "error"}`). There is no step-level error type; the triplet already expresses it. **(2) `step.task_error`** is a lifecycle marker for the *task* reaching an abnormal state — an unrecoverable harness fault, or a halt — not tied to any one step; the task may resume afterwards, so a log can contain a `step.task_error` followed by further steps. **(3) An action blocked by a rule or policy** is a third case, and one the AAG does not itself represent — the AAG describes behaviour, it does not enforce. When an engine blocks an intended behavioral step that never gains an `output`, the block may surface as a `step.task_error` if it halts the task, or as the intended action re-emitted with a denial `output`. Exactly how a block is recorded is left to the [RFC](../rfc/0001-agent-action-vocabulary.md) (see *Recording blocked actions*).
 
-Below is an example of a full (short) task for illustration purposes. It runs from `task.start` to `task.end` — the stream a harness emits for one run. A realistic task interleaves model calls (to plan, then to compose the answer) with the resource and message steps. Note that `task.*` actions carry no `verb` and no `input`/`output`; `task.start` carries agent context in the `agent` group; and each `step.model` output is itself a source (§3.1). The model `input`/`output` here are shown only in outline — the AAG does not require their content (see §3.1; input/output granularity is discussed in the [RFC](../rfc/0001-agent-action-vocabulary.md)):
+Below is an example of a full (short) task for illustration purposes. It runs from `step.task_start` to `step.task_end` — the stream a harness emits for one run. A realistic task interleaves model calls (to plan, then to compose the answer) with the resource and message steps. Note that the four `step.task_*` boundary actions take no `verb`; `step.task_start` carries agent context in the `agent` group; and each `step.model` output is itself a source (§3.1). The model `input`/`output` here are shown only in outline — the AAG does not require their content (see §3.1; input/output granularity is discussed in the [RFC](../rfc/0001-agent-action-vocabulary.md)):
 
 ```json
 [
@@ -212,7 +216,7 @@ Below is an example of a full (short) task for illustration purposes. It runs fr
     "seq": 0,
     "timestamp": "2026-07-30T09:14:20Z",
     "step_name": "handle_support_ticket_4821",
-    "type": "task.start",
+    "type": "step.task_start",
     "aag_version": "0.5.0",
     "properties": {
       "agent": {
@@ -287,7 +291,7 @@ Below is an example of a full (short) task for illustration purposes. It runs fr
     "seq": 6,
     "timestamp": "2026-07-30T09:14:26Z",
     "step_name": "ticket_resolved",
-    "type": "task.end"
+    "type": "step.task_end"
   }
 ]
 ```
@@ -311,7 +315,7 @@ The AAG makes one core assumption about how an agent's memory behaves:
 In other words, memory (and therefore *taint* — the influence of sensitive or externally-controlled data) is **monotonic and task-scoped**:
 
 - **Monotonic:** once financial data is read at step 3, steps 4…N are all assumed to *potentially* carry it. The AAG never assumes an agent "forgot" something mid-task.
-- **Task-scoped:** `task.start` opens a fresh scope; `task.end` closes it. Two different `task_id`s share nothing implicitly; anything carried between them must appear as an explicit action (see §3.3).
+- **Task-scoped:** `step.task_start` opens a fresh scope; `step.task_end` closes it. Two different `task_id`s share nothing implicitly; anything carried between them must appear as an explicit action (see §3.3).
 
 Under this assumption the object to reason about is the *path* — the ordered sequence of actions from the start of the task till the end of the task as opposed to simply reasoning about individual steps. Why? Because a `GET` from an external API and a later *write* (a `POST`, `PATCH`, or `DELETE`) to a different one are each, as individual steps, likely unremarkable. However, the same two in sequence, in one task, form a data exfiltration path. The formal argument for reasoning about paths is in *[Runtime Governance for AI Agents: Policies on Paths](https://arxiv.org/abs/2603.16586)*, Kaptein, Khan & Podstavnychy (2026), but the short version is simply that the order of steps matters for security and governance, the order is decided at runtime by the agent, and hence the whole path needs to be accounted for.
 
@@ -327,7 +331,7 @@ The distinction that matters most in many practical cases is **user vs. external
 
 ### 3.3 `step.self` and durable memory
 
-The clean-slate rule of §3.1 does not say that an agent's own state must be wiped at `task.end`. It says something narrower: nothing enters a task *implicitly*. Durable memory — a scratchpad or a vector store the agent owns that outlives the task — is fully compatible with the model, because access to it is mediated by observable actions:
+The clean-slate rule of §3.1 does not say that an agent's own state must be wiped at `step.task_end`. It says something narrower: nothing enters a task *implicitly*. Durable memory — a scratchpad or a vector store the agent owns that outlives the task — is fully compatible with the model, because access to it is mediated by observable actions:
 
 - Memory is **read** into a later task via `step.self GET` — a source, classifiable like any other read.
 - Memory is **written** via `step.self POST` — a sink into a store that outlives the task.
@@ -339,9 +343,8 @@ So cross-task influence is not assumed away; it becomes *visible* as a `step.sel
 A task is precisely a **shared-memory scope** (§3.1), and that one idea settles how sub-agents and multi-agent systems are represented:
 
 - **Shared memory → one task.** When an agent spawns sub-agents that share working memory to complete a single goal, they are, in AAG terms, the *same task*: they emit under one `task_id`. The `agent_id` then varies from action to action, recording which agent acted, while the task stays the memory (and taint) scope. Nothing special is required — the path is simply the interleaved stream of all their actions.
-- **Separate memory → separate tasks.** When an agent hands work to another agent that has its own memory, that is a *new task* — a fresh blank slate (§3.1). The hand-over is not implicit: it is a `step.message POST` from the first agent that enters the second as a `step.message GET`. The two tasks are linked by `parent_task_id` (§2.2) on the child's `task.start`, and — because the parent is not a trusted human — the receiving `step.message` should carry `counterpart.kind: parent_agent` with an explicit `counterpart.trust` (§2.4), so the child does not mistake the brief for a trusted user instruction.
+- **Separate memory → separate tasks.** When an agent hands work to another agent that has its own memory, that is a *new task* — a fresh blank slate (§3.1). The hand-over is not implicit: it is a `step.message POST` from the first agent that enters the second as a `step.message GET`. The two tasks are linked by `parent_task_id` (§2.2) on the child's `step.task_start`, and — because the parent is not a trusted human — the receiving `step.message` should carry `counterpart.kind: parent_agent` with an explicit `counterpart.trust` (§2.4), so the child does not mistake the brief for a trusted user instruction.
 
 **Ordering.** Within one (possibly multi-agent) task, `seq` *is* the order, assigned where actions are logged — typically the parent or coordinating agent, incrementing `seq` as each action is recorded. If the order of actions matters for security it must be serialized; running actions concurrently under one `task_id` deliberately relaxes the order. `timestamp` stays advisory (wall-clock, subject to skew).
 
 This is the AAG's *suggested* handling — really just a way of using the existing grammar, with no new machinery. Whether it is the right or only approach — and whether the `counterpart` trust marking should be *required* on a hand-over — is left open for the [RFC](../rfc/0001-agent-action-vocabulary.md).
-

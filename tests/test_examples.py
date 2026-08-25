@@ -42,5 +42,5 @@ def test_task_example(path: Path) -> None:
         task_ids.add(action["task_id"])
         types.append(action["type"])
     assert len(task_ids) == 1, f"{path.name} mixes task_ids: {task_ids}"
-    assert types[0] == "task.start"
-    assert types[-1] == "task.end"
+    assert types[0] == "step.task_start"
+    assert types[-1] == "step.task_end"

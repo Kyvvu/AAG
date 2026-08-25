@@ -67,12 +67,14 @@ def check_consistency(spec: dict[str, Any]) -> list[str]:
     if len(action_types) != 12:
         errors.append(f"expected 12 action types, found {len(action_types)}")
     for t, d in action_types.items():
-        if "." not in t:
-            errors.append(f"{t}: type must contain a '.' scope prefix")
+        # Every action type name starts with `step.`.
+        if not t.startswith("step."):
+            errors.append(f"{t}: every action type must be in the 'step.' namespace")
             continue
-        prefix = t.split(".", 1)[0]
-        if d.get("scope") != prefix:
-            errors.append(f"{t}: scope '{d.get('scope')}' does not match prefix '{prefix}'")
+        if "scope" in d or "granularity" in d:
+            errors.append(
+                f"{t}: `scope` and `granularity` are not valid action-type keys"
+            )
         for v in d.get("verbs", []):
             if v not in VALID_VERBS:
                 errors.append(f"{t}: unknown verb '{v}'")
@@ -138,7 +140,7 @@ def build_action_schema(spec: dict[str, Any]) -> dict[str, Any]:
 
     Encodes the closed grammar: the type enum, the per-type verb legality
     (verb required and constrained where a type declares verbs; forbidden
-    otherwise), the always-required fields, the task.start-only fields, a
+    otherwise), the always-required fields, the step.task_start-only fields, a
     closed top-level field set, and an open `properties` object.
     """
     types = list(spec["action_types"])
@@ -186,11 +188,11 @@ def build_action_schema(spec: dict[str, Any]) -> dict[str, Any]:
             cond["then"] = {"properties": {"verb": False}}  # verb not allowed
         all_of.append(cond)
 
-    # Fields restricted to task.start.
-    task_only = [f for f, d in fields.items() if d.get("only_on") == ["task.start"]]
+    # Fields restricted to step.task_start.
+    task_only = [f for f, d in fields.items() if d.get("only_on") == ["step.task_start"]]
     if task_only:
         all_of.append({
-            "if": {"not": {"properties": {"type": {"const": "task.start"}}}},
+            "if": {"not": {"properties": {"type": {"const": "step.task_start"}}}},
             "then": {"properties": {f: False for f in task_only}},
         })
 

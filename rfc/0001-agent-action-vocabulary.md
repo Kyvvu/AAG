@@ -35,7 +35,7 @@ real-time security policies that intervene in an agent's path at runtime.
 
 The AAG considers an agent's work to be composed of multiple tasks. 
 A new **task**, which is the boundary between data in memory, opens with
-`task.start`, runs a stream of steps, and closes with `task.end`. 
+`step.task_start`, runs a stream of steps, and closes with `step.task_end`. 
 
 Every record — lifecycle marker or `step` — is an **action**.
 
@@ -45,8 +45,8 @@ Every record — lifecycle marker or `step` — is an **action**.
 
 | type | what it is |
 |------|-----------|
-| `task.start` · `task.end` | a task opens · closes |
-| `task.error` · `task.idle` | a task fails (may resume) · pauses |
+| `step.task_start` · `step.task_end` | a task opens · closes |
+| `step.task_error` · `step.task_idle` | a task fails (may resume) · pauses |
 | `step.resource` | read or write a resource or tool — the workhorse |
 | `step.message` | receive from / send to whoever the agent is talking to |
 | `step.model` | invoke a model |
@@ -70,7 +70,7 @@ method:
 
 So a `GET` that smuggles data outward through a large query string should, in AAG, be a
 `POST`. Some types take no verb: `step.model` is both a source and a sink;
-`step.exec`, `step.gate`, and all `task.*` carry none.
+`step.exec`, `step.gate`, and the four `step.task_*` lifecycle markers carry none.
 
 ### Properties
 
@@ -87,9 +87,7 @@ An action is one JSON object in three layers:
 - **classification** — `type`, and (where the type takes one) `verb`;
 - **content** — `properties` (the security-relevant metadata), `input`, `output`.
 
-One of the core features of the AAG is the notion of an intended action: **an action with no `output` is *intended*** —
-described *before* it executes, so a security layer can allow or deny it before
-any effect. An action *with* an `output` is considered *completed*. 
+One of the core features of the AAG is the notion of an intended action: **a behavioral step with no `output` is *intended*** — described *before* it executes, so a security layer can allow or deny it before any effect. A behavioral step *with* an `output` is considered *completed*.
 
 The pre-execution object, the intended action, is exactly what an observability span — a record of something that already
 happened — cannot (and should not) represent.
@@ -162,11 +160,11 @@ What exactly goes in `input` and `output`? For a `step.model`, is `input` the fu
 
 ### Recording blocked actions
 
-When a pre-execution check denies an intended action, how is that recorded? In the intended/completed model (`model.md` §2.2) a denied action is naturally an intended record that never gains an `output` — but that is indistinguishable from one still pending, or simply never followed up. **Preferred direction:** a blocked action should leave a *visible, unambiguous* trace rather than a silent gap: the intended record, carrying an `action_id`, followed by a matching terminal record that repeats the `action_id` — either the action re-emitted with an `output` marking the denial, or a `task.error` if the denial halts the task. The exact shape of the denial `output` is unsettled; what matters is that "was blocked" and "never happened" are not confusable in a log.
+When a pre-execution check denies an intended action, how is that recorded? In the intended/completed model (`model.md` §2.2) a denied action is naturally an intended record that never gains an `output` — but that is indistinguishable from one still pending, or simply never followed up. **Preferred direction:** a blocked action should leave a *visible, unambiguous* trace rather than a silent gap: the intended record, carrying an `action_id`, followed by a matching terminal record that repeats the `action_id` — either the action re-emitted with an `output` marking the denial, or a `step.task_error` if the denial halts the task. The exact shape of the denial `output` is unsettled; what matters is that "was blocked" and "never happened" are not confusable in a log.
 
 ### Versioning: out-of-band negotiation
 
-The in-band mechanism is specified: `task.start` may carry `aag_version`, and semantic versioning applies to the vocabulary so a consumer can distinguish a compatible minor addition from a breaking change. What remains open is **out-of-band agreement** — whether a channel-level declaration (a header, an OTLP resource attribute) should be defined for streams whose `task.start` an intermediary never sees.
+The in-band mechanism is specified: `step.task_start` may carry `aag_version`, and semantic versioning applies to the vocabulary so a consumer can distinguish a compatible minor addition from a breaking change. What remains open is **out-of-band agreement** — whether a channel-level declaration (a header, an OTLP resource attribute) should be defined for streams whose `step.task_start` an intermediary never sees.
 
 ### A verb for `step.exec`
 

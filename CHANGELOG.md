@@ -6,6 +6,28 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- **A single action-type namespace.** All twelve action types now live under
+  `step.`; the four that mark task boundaries are renamed `step.task_start`,
+  `step.task_end`, `step.task_error`, and `step.task_idle`. Consumers that need
+  to separate boundaries from actions match those four type names.
+
+### Removed
+
+- **The granularity axis, in full** — first the top-level
+  `scopes: [task, step]` enumeration in
+  [`spec/vocabulary.yaml`](spec/vocabulary.yaml), then the `granularity` block
+  that briefly replaced it. With one namespace the projection is constant, so
+  it classified nothing. The generator now rejects any action type outside
+  `step.`.
+- **The per-action-type `scope: task` / `scope: step` field.** It restated the
+  type prefix and could only ever agree with it, so it was removed rather than
+  renamed; the generator now rejects a source that carries it. The `(type, verb)`
+  legality table is unchanged — granularity never separated a pair, which is the
+  evidence it carried no information of its own. No emitted action ever carried
+  the field, so the wire format is unaffected.
+
 ## [0.5.0] — draft
 
 The first drafted version of the AAG, open for comment via

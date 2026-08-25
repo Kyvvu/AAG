@@ -19,8 +19,8 @@ must pass, the `invalid_*` ones must fail.
 | [`step_credential_get.json`](actions/step_credential_get.json) | A `step.credential` GET (reading a secret from `.env`) — note the secret value stays out of `output`, only `data.classification: secret`. |
 | [`step_self_post.json`](actions/step_self_post.json) | A `step.self` POST — the agent writing to its own memory (state that may outlive the task). |
 | [`step_exec.json`](actions/step_exec.json) | A `step.exec` — code execution; the `command` is a bare, type-scoped leaf. |
-| [`task_start.json`](actions/task_start.json) | A `task.start` carrying agent context (`agent.*`) and `aag_version`. |
-| [`task_idle.json`](actions/task_idle.json) · [`task_error.json`](actions/task_error.json) | The `task.idle` and `task.error` lifecycle markers. |
+| [`step_task_start.json`](actions/step_task_start.json) | A `step.task_start` carrying agent context (`agent.*`) and `aag_version`. |
+| [`step_task_idle.json`](actions/step_task_idle.json) · [`step_task_error.json`](actions/step_task_error.json) | The `step.task_idle` and `step.task_error` lifecycle markers. |
 | [`step_gate.json`](actions/step_gate.json) | A `step.gate`. Its decision (`pass`/`deny`) is the action's **`output`**; `input` is what was checked; `kind` (human/guardrail) is a property. |
 
 ### Invalid (must fail)
@@ -28,7 +28,7 @@ must pass, the `invalid_*` ones must fail.
 | file | why it is malformed |
 |------|---------------------|
 | [`invalid_step_model_with_verb.json`](actions/invalid_step_model_with_verb.json) | `step.model` is a verbless type (a model call is both a source and a sink), so carrying a `verb` is not a legal `(type, verb)` combination. |
-| [`invalid_task_start_with_verb.json`](actions/invalid_task_start_with_verb.json) | `task.*` types take no verb; a `task.start` carrying a `verb` is malformed. |
+| [`invalid_step_task_start_with_verb.json`](actions/invalid_step_task_start_with_verb.json) | The lifecycle types take no verb; a `step.task_start` carrying a `verb` is malformed. |
 | [`invalid_unknown_type.json`](actions/invalid_unknown_type.json) | `type` must be one of the twelve; `step.frobnicate` is not in the closed set. |
 
 ## Tasks — `tasks/`
@@ -37,12 +37,12 @@ The AAG specifies a single **action**. It does not define a task-file format —
 task is simply every action that shares one `task_id`.
 
 - [`support_ticket.ndjson`](tasks/support_ticket.ndjson) — a full task, from
-  `task.start` to `task.end`: the support agent receives a billing question,
+  `step.task_start` to `step.task_end`: the support agent receives a billing question,
   calls the model to plan (which returns a tool call), reads the customer record
   (pulling `pii` into the task), calls the model to compose an answer, passes an
   exfiltration-review gate, and replies to the user.
 - [`subagent_handover.ndjson`](tasks/subagent_handover.ndjson) — a **sub-agent**
-  task with its own memory: `task.start` links back to the parent via
+  task with its own memory: `step.task_start` links back to the parent via
   `parent_task_id`, the brief arrives as a `step.message` GET carrying
   `counterpart.kind: parent_agent` (**untrusted** — the parent is not the human
   user), the sub-agent fetches public docs, and returns the result to the parent.
