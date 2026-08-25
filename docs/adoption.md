@@ -85,7 +85,7 @@ a completed action — put the error in `output` ([`model.md`](model.md) §2.5):
 
 ## Step 5 — close the task
 
-Emit `step.task_end` to close the task normally. Use `step.task_error` if the run terminated abnormally, or `step.task_idle` if it paused awaiting input — either may be followed by further actions and a later `step.task_end` (see [`model.md`](model.md) §2.1).
+Emit `step.task_end` to close the task normally. Use `step.task_error` if the run reaches an abnormal state, or `step.task_idle` if it pauses awaiting input — either may be followed by further actions and a later `step.task_end` (see [`model.md`](model.md) §2.1).
 
 ## Properties carry the security meaning
 

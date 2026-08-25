@@ -87,9 +87,7 @@ An action is one JSON object in three layers:
 - **classification** — `type`, and (where the type takes one) `verb`;
 - **content** — `properties` (the security-relevant metadata), `input`, `output`.
 
-One of the core features of the AAG is the notion of an intended action: **an action with no `output` is *intended*** —
-described *before* it executes, so a security layer can allow or deny it before
-any effect. An action *with* an `output` is considered *completed*. 
+One of the core features of the AAG is the notion of an intended action: **a behavioral step with no `output` is *intended*** — described *before* it executes, so a security layer can allow or deny it before any effect. A behavioral step *with* an `output` is considered *completed*.
 
 The pre-execution object, the intended action, is exactly what an observability span — a record of something that already
 happened — cannot (and should not) represent.

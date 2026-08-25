@@ -32,25 +32,24 @@ def test_emitted_schema_is_valid_json_schema() -> None:
 
 
 def test_consistency_catches_type_outside_the_step_namespace() -> None:
-    """One namespace: a new prefix is a spec error, not a new category."""
+    """Every action type name must use the ``step.`` prefix."""
     spec = copy.deepcopy(generate.load())
     spec["action_types"]["plan.sketch"] = spec["action_types"].pop("step.task_idle")
     assert any("'step.' namespace" in e for e in generate.check_consistency(spec))
 
 
 def test_consistency_rejects_retired_granularity_on_action_type() -> None:
-    """An action type carries no `granularity` key; a source adding one must fail."""
+    """Unsupported action-type metadata fails the consistency check."""
     spec = copy.deepcopy(generate.load())
     spec["action_types"]["step.task_start"]["granularity"] = "step"
-    assert any("retired" in e for e in generate.check_consistency(spec))
+    assert any("not valid action-type keys" in e for e in generate.check_consistency(spec))
 
 
 def test_consistency_rejects_legacy_scope_field() -> None:
-    # An action type carries no `scope` key; a source that adds one must fail
-    # loudly rather than be silently ignored.
+    # Unsupported action-type metadata must fail loudly rather than be ignored.
     spec = copy.deepcopy(generate.load())
     spec["action_types"]["step.task_start"]["scope"] = "task"
-    assert any("retired" in e for e in generate.check_consistency(spec))
+    assert any("not valid action-type keys" in e for e in generate.check_consistency(spec))
 
 
 def test_consistency_catches_bad_verb() -> None:

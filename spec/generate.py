@@ -67,15 +67,13 @@ def check_consistency(spec: dict[str, Any]) -> list[str]:
     if len(action_types) != 12:
         errors.append(f"expected 12 action types, found {len(action_types)}")
     for t, d in action_types.items():
-        # One namespace: every action type lives under `step.`, so a type
-        # carrying any other prefix is a spec error rather than a new category.
+        # Every action type name starts with `step.`.
         if not t.startswith("step."):
             errors.append(f"{t}: every action type must be in the 'step.' namespace")
             continue
         if "scope" in d or "granularity" in d:
             errors.append(
-                f"{t}: `scope` and `granularity` are retired keys; "
-                f"an action type carries neither"
+                f"{t}: `scope` and `granularity` are not valid action-type keys"
             )
         for v in d.get("verbs", []):
             if v not in VALID_VERBS:

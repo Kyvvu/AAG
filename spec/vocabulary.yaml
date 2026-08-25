@@ -19,14 +19,11 @@ license: "CC-BY-4.0"
 spec: "../docs/model.md"
 
 # --- Namespace ---------------------------------------------------------------
-# Every action `type` lives in the `step.` namespace. Four of the twelve mark
-# the boundaries of a task (`step.task_start`, `step.task_end`,
-# `step.task_error`, `step.task_idle`); the rest describe action within one.
-#
-# The namespace is the only prefix in the vocabulary, so a type name carries no
-# further classification of its own: an action's meaning comes from its `type`
-# and, where the type takes one, its `verb`. Consumers that need to separate
-# task boundaries from actions match the four type names.
+# All twelve action `type`s live in the `step.` namespace. Four mark task
+# boundaries (`step.task_start`, `step.task_end`, `step.task_error`, and
+# `step.task_idle`); the other eight describe behavior within a task.
+# An action is classified by its `type` and, where applicable, its `verb`.
+# Consumers recognize task boundaries by matching the four boundary type names.
 
 # --- Verbs -------------------------------------------------------------------
 # A verb records the DATA-FLOW intent of a step, not the HTTP method a tool
