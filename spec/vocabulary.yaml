@@ -23,10 +23,10 @@ spec: "../docs/model.md"
 # the boundaries of a task (`step.task_start`, `step.task_end`,
 # `step.task_error`, `step.task_idle`); the rest describe action within one.
 #
-# Earlier drafts carried a `granularity` axis with values [task, step], derived
-# by reading the segment before the first '.'. It is removed: with a single
-# namespace the projection is constant, so it classified nothing. Consumers
-# that need to separate task boundaries from actions match the four type names.
+# The namespace is the only prefix in the vocabulary, so a type name carries no
+# further classification of its own: an action's meaning comes from its `type`
+# and, where the type takes one, its `verb`. Consumers that need to separate
+# task boundaries from actions match the four type names.
 
 # --- Verbs -------------------------------------------------------------------
 # A verb records the DATA-FLOW intent of a step, not the HTTP method a tool

@@ -19,8 +19,8 @@ must pass, the `invalid_*` ones must fail.
 | [`step_credential_get.json`](actions/step_credential_get.json) | A `step.credential` GET (reading a secret from `.env`) — note the secret value stays out of `output`, only `data.classification: secret`. |
 | [`step_self_post.json`](actions/step_self_post.json) | A `step.self` POST — the agent writing to its own memory (state that may outlive the task). |
 | [`step_exec.json`](actions/step_exec.json) | A `step.exec` — code execution; the `command` is a bare, type-scoped leaf. |
-| [`task_start.json`](actions/task_start.json) | A `step.task_start` carrying agent context (`agent.*`) and `aag_version`. |
-| [`task_idle.json`](actions/task_idle.json) · [`task_error.json`](actions/task_error.json) | The `step.task_idle` and `step.task_error` lifecycle markers. |
+| [`step_task_start.json`](actions/step_task_start.json) | A `step.task_start` carrying agent context (`agent.*`) and `aag_version`. |
+| [`step_task_idle.json`](actions/step_task_idle.json) · [`step_task_error.json`](actions/step_task_error.json) | The `step.task_idle` and `step.task_error` lifecycle markers. |
 | [`step_gate.json`](actions/step_gate.json) | A `step.gate`. Its decision (`pass`/`deny`) is the action's **`output`**; `input` is what was checked; `kind` (human/guardrail) is a property. |
 
 ### Invalid (must fail)
@@ -28,7 +28,7 @@ must pass, the `invalid_*` ones must fail.
 | file | why it is malformed |
 |------|---------------------|
 | [`invalid_step_model_with_verb.json`](actions/invalid_step_model_with_verb.json) | `step.model` is a verbless type (a model call is both a source and a sink), so carrying a `verb` is not a legal `(type, verb)` combination. |
-| [`invalid_task_start_with_verb.json`](actions/invalid_task_start_with_verb.json) | `task.*` types take no verb; a `step.task_start` carrying a `verb` is malformed. |
+| [`invalid_step_task_start_with_verb.json`](actions/invalid_step_task_start_with_verb.json) | The lifecycle types take no verb; a `step.task_start` carrying a `verb` is malformed. |
 | [`invalid_unknown_type.json`](actions/invalid_unknown_type.json) | `type` must be one of the twelve; `step.frobnicate` is not in the closed set. |
 
 ## Tasks — `tasks/`

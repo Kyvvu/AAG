@@ -39,15 +39,15 @@ def test_consistency_catches_type_outside_the_step_namespace() -> None:
 
 
 def test_consistency_rejects_retired_granularity_on_action_type() -> None:
-    """`granularity` is retired; restating it on a type must still be caught."""
+    """An action type carries no `granularity` key; a source adding one must fail."""
     spec = copy.deepcopy(generate.load())
     spec["action_types"]["step.task_start"]["granularity"] = "step"
     assert any("retired" in e for e in generate.check_consistency(spec))
 
 
 def test_consistency_rejects_legacy_scope_field() -> None:
-    # AAG <=0.5.0 drafts carried `scope: task|step` per action type. It is gone;
-    # a source still carrying it must fail loudly rather than be ignored.
+    # An action type carries no `scope` key; a source that adds one must fail
+    # loudly rather than be silently ignored.
     spec = copy.deepcopy(generate.load())
     spec["action_types"]["step.task_start"]["scope"] = "task"
     assert any("retired" in e for e in generate.check_consistency(spec))

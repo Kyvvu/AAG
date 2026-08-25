@@ -70,7 +70,7 @@ method:
 
 So a `GET` that smuggles data outward through a large query string should, in AAG, be a
 `POST`. Some types take no verb: `step.model` is both a source and a sink;
-`step.exec`, `step.gate`, and all `task.*` carry none.
+`step.exec`, `step.gate`, and the four `step.task_*` lifecycle markers carry none.
 
 ### Properties
 

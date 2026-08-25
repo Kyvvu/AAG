@@ -16,7 +16,7 @@ The general structure the AAG describes for handling an agent carrying out a tas
 
 Thus, the AAG describes a uniform way of describing what an agent is doing — what actions it is taking — *as it is carrying out a task*. The AAG explicitly does not cover any methods of *securing* based on this description; security policies and rules can be built once the AAG is adopted, and for now we leave that to others. We are solely concerned with having a unified, meaningful (for agent security) *description* of what an agent does as it is pursuing its task.
 
-One point of vocabulary, since it recurs throughout: we use **action** as the general term for any record a harness emits — both the `task.*` lifecycle markers and the `step.*` behaviors are thus "actions" in our writing here. However, we use **step** specifically for a `step.*` action. A `step.task_start` is therefore an action but not a step, and the triplet of point 3 above applies to steps, not to task markers.
+One point of vocabulary, since it recurs throughout: we use **action** as the general term for any record a harness emits — both the four `step.task_*` lifecycle markers and the eight behavioral types are thus "actions" in our writing here. However, we use **step** specifically for a behavioral action — one of the eight types that is not a lifecycle marker. A `step.task_start` is therefore an action but not a step, and the triplet of point 3 above applies to steps, not to task markers.
 
 ### The structure of this document
 
@@ -30,11 +30,11 @@ One point of vocabulary, since it recurs throughout: we use **action** as the ge
 
 ### 2.1 Action types
 
-The AAG consists of twelve action types: four `task.*` lifecycle types and eight `step.*` types which describe agent behavior within a task. Any `(type, verb)` pair not listed in the tables below is malformed and not a part of the AAG.
+The AAG consists of twelve action types: four `step.task_*` lifecycle types and eight further `step.*` types which describe agent behavior within a task. Any `(type, verb)` pair not listed in the tables below is malformed and not a part of the AAG.
 
-**One namespace.** All twelve action types live under `step.`. Four of them mark the boundaries of a task — `step.task_start`, `step.task_end`, `step.task_error`, `step.task_idle` — and the rest describe action within one, but they are the same kind of thing: emitted in the same stream, legal under the same `(type, verb)` table, matched the same way. Earlier drafts split them across a `task.` namespace and carried the split as a second axis (first a per-type `scope` field, then a derived `granularity` projection). Both are removed. The legality tables above are keyed on `(type, verb)` alone, and adding the axis as a third key never separated a single pair — which is the evidence that it classified nothing. A consumer that needs to distinguish task boundaries from actions matches the four type names.
+**One namespace.** All twelve action types live under `step.`. Four of them mark the boundaries of a task — `step.task_start`, `step.task_end`, `step.task_error`, `step.task_idle` — and the rest describe action within one, but they are the same kind of thing: emitted in the same stream, legal under the same `(type, verb)` table, matched the same way. Legality is keyed on `(type, verb)` alone: that pair is what the tables below enumerate, and it is the whole of what makes an action well-formed. A consumer that needs to distinguish task boundaries from actions matches the four type names.
 
-#### Task lifecycle (`task.*`, no verb)
+#### Task lifecycle (`step.task_*`, no verb)
 
 | type         | meaning & security implication                                                                                  |
 |--------------|----------------------------------------------------------------------------------------------------------------|
@@ -90,8 +90,8 @@ The following fields are explicitly part of the AAG:
 
 Please note that **task and step actions are not symmetric.** 
 
-* A `task.*` action — a lifecycle marker such as `step.task_start` — carries positioning, a `type`, and *context* properties (§2.4). It has no `verb`, and neither the `input` (arguments) nor `output` (result) of the triplet: only its metadata (`properties`) is present. Also, most `agent.` properties (see below) will be part of a `task.*` action, not an individual `step.*`.
-* A `step.*` action carries the full triplet. The intended/completed distinction therefore applies to **steps only**: a `step.task_start` with no `output` is not an "intended" action, it is a lifecycle marker.
+* A lifecycle marker — `step.task_start`, `step.task_end`, `step.task_error`, or `step.task_idle` — carries positioning, a `type`, and *context* properties (§2.4). It has no `verb`, and neither the `input` (arguments) nor `output` (result) of the triplet: only its metadata (`properties`) is present. Also, most `agent.` properties (see below) will be part of a lifecycle marker, not an individual step.
+* A step — any of the other eight types — carries the full triplet. The intended/completed distinction therefore applies to **steps only**: a `step.task_start` with no `output` is not an "intended" action, it is a lifecycle marker.
 
 ### 2.3 Verbs
 
