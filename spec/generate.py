@@ -61,6 +61,10 @@ def check_consistency(spec: dict[str, Any]) -> list[str]:
     if verbs != VALID_VERBS:
         errors.append(f"`verbs` must be exactly {sorted(VALID_VERBS)}, got {sorted(verbs)}")
 
+    # `granularity` is a derived projection of the type namespace, not a field on
+    # an action: the declared values must be exactly the set of type prefixes.
+    granularities = set(spec.get("granularity", {}).get("values", []))
+
     action_types = spec.get("action_types", {})
     # Tripwire: the count is deliberately hard-coded — adding or removing a type
     # is a conscious, versioned change, so it should force an edit here too.
@@ -68,11 +72,19 @@ def check_consistency(spec: dict[str, Any]) -> list[str]:
         errors.append(f"expected 12 action types, found {len(action_types)}")
     for t, d in action_types.items():
         if "." not in t:
-            errors.append(f"{t}: type must contain a '.' scope prefix")
+            errors.append(f"{t}: type must contain a '.' granularity prefix")
             continue
         prefix = t.split(".", 1)[0]
-        if d.get("scope") != prefix:
-            errors.append(f"{t}: scope '{d.get('scope')}' does not match prefix '{prefix}'")
+        if prefix not in granularities:
+            errors.append(
+                f"{t}: prefix '{prefix}' is not a declared granularity "
+                f"{sorted(granularities)}"
+            )
+        if "scope" in d or "granularity" in d:
+            errors.append(
+                f"{t}: granularity is derived from the type prefix and must not "
+                f"be restated on the action type"
+            )
         for v in d.get("verbs", []):
             if v not in VALID_VERBS:
                 errors.append(f"{t}: unknown verb '{v}'")

@@ -32,13 +32,15 @@ One point of vocabulary, since it recurs throughout: we use **action** as the ge
 
 The AAG consists of twelve action types: four `task.*` lifecycle types and eight `step.*` types which describe agent behavior within a task. Any `(type, verb)` pair not listed in the tables below is malformed and not a part of the AAG.
 
+**Granularity is derived, not declared.** Whether an action is task-level or step-level — its **granularity** — is read off the `type` prefix: the segment before the first `.` (`task.*` → `task`, `step.*` → `step`). It is not an independent axis of the vocabulary and never appears as a field on an emitted action; it is a projection of the type namespace, and a consumer that wants to group actions by granularity derives it. Note that the legality tables above are keyed on `(type, verb)` alone: adding granularity as a third key would not separate a single pair, which is precisely why it is not an axis. (Earlier drafts carried it as a `scope` field on each action type; it was removed as redundant with the prefix.)
+
 #### Task lifecycle (`task.*`, no verb)
 
 | type         | meaning & security implication                                                                                  |
 |--------------|----------------------------------------------------------------------------------------------------------------|
 | `task.start` | Opens a task. Establishes a fresh memory scope — nothing is carried from prior tasks. May carry agent, task, or organizational context (§2.4): e.g. the agent's risk tier, purpose, and environment. |
 | `task.end`   | Closes a task. The task's memory scope ends; nothing *implicitly* survives into another task.                                |
-| `task.error` | The task terminated abnormally. Marks an incomplete path — may indicate a blocked or failed step. The task may resume after an error.               |
+| `task.error` | The task reached an abnormal state. It may indicate a blocked or failed step, and the task may resume afterwards.               |
 | `task.idle`  | The task is paused (e.g. awaiting input). Memory is assumed to persist across the idle period — the agent is still on the same task. There is no explicit resume marker: the next action on the task signals resumption (the same holds after `task.error`).    |
 
 #### Steps (`step.*`)
@@ -90,6 +92,10 @@ Please note that **task and step actions are not symmetric.**
 
 * A `task.*` action — a lifecycle marker such as `task.start` — carries positioning, a `type`, and *context* properties (§2.4). It has no `verb`, and neither the `input` (arguments) nor `output` (result) of the triplet: only its metadata (`properties`) is present. Also, most `agent.` properties (see below) will be part of a `task.*` action, not an individual `step.*`.
 * A `step.*` action carries the full triplet. The intended/completed distinction therefore applies to **steps only**: a `task.start` with no `output` is not an "intended" action, it is a lifecycle marker.
+
+> Note for implementers: `action.schema.json` does not currently reject an
+> `input` or `output` on a `task.*` lifecycle marker. The prose above is
+> normative; the generated schema is a partial check of it.
 
 ### 2.3 Verbs
 

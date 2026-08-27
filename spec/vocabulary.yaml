@@ -18,10 +18,18 @@ name: "Agent Action Grammar"
 license: "CC-BY-4.0"
 spec: "../docs/model.md"
 
-# --- Scopes ------------------------------------------------------------------
-# Derived from the action-type prefix (task.* -> task, else step). Not carried
-# as a separate field; listed for consumers.
-scopes: [task, step]
+# --- Granularity (derived) ---------------------------------------------------
+# `granularity` is NOT an independent axis of the vocabulary. It is a projection
+# of the action-type namespace: read it off the segment before the first '.' of
+# the action `type` (`task.*` -> task, `step.*` -> step). It is therefore never
+# carried as a field on an emitted action, and it is not restated on each entry
+# in `action_types` below — that would duplicate the prefix and allow the two to
+# disagree. Consumers that want to group actions by granularity derive it.
+granularity:
+  derived: true
+  derived_from: type
+  rule: "The segment of the action `type` before the first '.'."
+  values: [task, step]
 
 # --- Verbs -------------------------------------------------------------------
 # A verb records the DATA-FLOW intent of a step, not the HTTP method a tool
@@ -41,55 +49,43 @@ verbs:
 # (type, verb) pairs is exactly each type crossed with its listed verbs.
 action_types:
 
-  # Task lifecycle (scope: task, no verb)
+  # Task lifecycle (granularity `task`, derived from the prefix; no verb)
   task.start:
-    scope: task
     verbs: []
     meaning: "Opens a task; establishes a fresh memory scope, nothing carried from prior tasks. May carry agent context (see properties)."
   task.end:
-    scope: task
     verbs: []
     meaning: "Closes a task; the memory scope ends. Nothing implicitly survives into another task."
   task.error:
-    scope: task
     verbs: []
     meaning: "The task reached an abnormal state. A lifecycle marker; the task may resume afterwards."
   task.idle:
-    scope: task
     verbs: []
     meaning: "The task is paused (e.g. awaiting input). Memory persists across the idle period."
 
-  # Steps (scope: step)
+  # Steps (granularity `step`, derived from the prefix)
   step.resource:
-    scope: step
     verbs: [GET, POST, PATCH, DELETE]
     meaning: "A call to a resource or tool outside the agent. GET reads; POST/PATCH/DELETE write. The general workhorse."
   step.message:
-    scope: step
     verbs: [GET, POST]
     meaning: "Communication with whatever the agent interacts with (a user, a parent agent, or a trigger). GET receives, POST sends."
   step.self:
-    scope: step
     verbs: [GET, POST, PATCH, DELETE]
     meaning: "The agent reading or writing its own state (e.g. memory). Writes may alter state that persists across tasks."
   step.model:
-    scope: step
     verbs: []
     meaning: "A model invocation. Data flows both ways (context out, completion in), so no single verb applies."
   step.credential:
-    scope: step
     verbs: [GET, POST, PATCH, DELETE]
     meaning: "A read or write of sensitive material (a secret or credential)."
   step.exec:
-    scope: step
     verbs: []
     meaning: "Code execution. Opaque by default; may be internally or externally scoped via properties."
   step.gate:
-    scope: step
     verbs: []
     meaning: "A gate — a guardrail or human approval — recording a decision on the surrounding path."
   step.unknown:
-    scope: step
     verbs: []
     meaning: "Catch-all for an action that could not be classified. To be treated as maximally risky."
 
