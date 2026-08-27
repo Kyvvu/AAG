@@ -3,7 +3,7 @@
 
 These cases are written by hand — not derived from the generator — so they
 independently pin the grammar: the type enum, per-type verb legality, required
-fields, the step.task_start-only fields, and the closed top-level field set. Each
+fields, the task.start-only fields, and the closed top-level field set. Each
 negative case asserts both that it fails *and* the reason it fails.
 """
 from __future__ import annotations
@@ -62,12 +62,12 @@ VALID: list[tuple[str, dict[str, Any]]] = [
     ("exec_verbless", act(type="step.exec", properties={"command": "ls"})),
     ("gate_verbless", act(type="step.gate", output={"decision": "pass"}, properties={"kind": "guardrail"})),
     ("unknown_verbless", act(type="step.unknown")),
-    ("task_start", act(type="step.task_start", aag_version="0.5.0",
+    ("task_start", act(type="task.start", aag_version="0.5.0",
                        properties={"agent": {"risk_classification": "high"}})),
-    ("task_start_with_parent", act(type="step.task_start", parent_task_id="run-parent")),
-    ("task_end", act(type="step.task_end")),
-    ("task_error", act(type="step.task_error")),
-    ("task_idle", act(type="step.task_idle")),
+    ("task_start_with_parent", act(type="task.start", parent_task_id="run-parent")),
+    ("task_end", act(type="task.end")),
+    ("task_error", act(type="task.error")),
+    ("task_idle", act(type="task.idle")),
 ]
 
 INVALID: list[tuple[str, dict[str, Any], str]] = [
@@ -80,8 +80,8 @@ INVALID: list[tuple[str, dict[str, Any], str]] = [
     ("message_verb_patch", act(type="step.message", verb="PATCH"), "is not one of"),
     ("message_verb_delete", act(type="step.message", verb="DELETE"), "is not one of"),
     ("model_with_verb", act(type="step.model", verb="POST"), "False schema does not allow"),
-    ("task_start_with_verb", act(type="step.task_start", verb="GET"), "False schema does not allow"),
-    ("task_end_with_verb", act(type="step.task_end", verb="GET"), "False schema does not allow"),
+    ("task_start_with_verb", act(type="task.start", verb="GET"), "False schema does not allow"),
+    ("task_end_with_verb", act(type="task.end", verb="GET"), "False schema does not allow"),
     ("exec_with_verb", act(type="step.exec", verb="GET"), "False schema does not allow"),
     ("gate_with_verb", act(type="step.gate", verb="GET"), "False schema does not allow"),
     ("unknown_type", act(type="step.frobnicate"), "is not one of"),

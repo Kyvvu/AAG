@@ -61,19 +61,29 @@ def check_consistency(spec: dict[str, Any]) -> list[str]:
     if verbs != VALID_VERBS:
         errors.append(f"`verbs` must be exactly {sorted(VALID_VERBS)}, got {sorted(verbs)}")
 
+    # `granularity` is a derived projection of the type namespace, not a field on
+    # an action: the declared values must be exactly the set of type prefixes.
+    granularities = set(spec.get("granularity", {}).get("values", []))
+
     action_types = spec.get("action_types", {})
     # Tripwire: the count is deliberately hard-coded — adding or removing a type
     # is a conscious, versioned change, so it should force an edit here too.
     if len(action_types) != 12:
         errors.append(f"expected 12 action types, found {len(action_types)}")
     for t, d in action_types.items():
-        # Every action type name starts with `step.`.
-        if not t.startswith("step."):
-            errors.append(f"{t}: every action type must be in the 'step.' namespace")
+        if "." not in t:
+            errors.append(f"{t}: type must contain a '.' granularity prefix")
             continue
+        prefix = t.split(".", 1)[0]
+        if prefix not in granularities:
+            errors.append(
+                f"{t}: prefix '{prefix}' is not a declared granularity "
+                f"{sorted(granularities)}"
+            )
         if "scope" in d or "granularity" in d:
             errors.append(
-                f"{t}: `scope` and `granularity` are not valid action-type keys"
+                f"{t}: granularity is derived from the type prefix and must not "
+                f"be restated on the action type"
             )
         for v in d.get("verbs", []):
             if v not in VALID_VERBS:
@@ -140,7 +150,7 @@ def build_action_schema(spec: dict[str, Any]) -> dict[str, Any]:
 
     Encodes the closed grammar: the type enum, the per-type verb legality
     (verb required and constrained where a type declares verbs; forbidden
-    otherwise), the always-required fields, the step.task_start-only fields, a
+    otherwise), the always-required fields, the task.start-only fields, a
     closed top-level field set, and an open `properties` object.
     """
     types = list(spec["action_types"])
@@ -188,11 +198,11 @@ def build_action_schema(spec: dict[str, Any]) -> dict[str, Any]:
             cond["then"] = {"properties": {"verb": False}}  # verb not allowed
         all_of.append(cond)
 
-    # Fields restricted to step.task_start.
-    task_only = [f for f, d in fields.items() if d.get("only_on") == ["step.task_start"]]
+    # Fields restricted to task.start.
+    task_only = [f for f, d in fields.items() if d.get("only_on") == ["task.start"]]
     if task_only:
         all_of.append({
-            "if": {"not": {"properties": {"type": {"const": "step.task_start"}}}},
+            "if": {"not": {"properties": {"type": {"const": "task.start"}}}},
             "then": {"properties": {f: False for f in task_only}},
         })
 

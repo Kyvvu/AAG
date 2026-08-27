@@ -3,6 +3,6 @@
   "task_id": "run-9f2ac1",
   "timestamp": "2026-07-30T09:14:20Z",
   "step_name": "handle_ticket",
-  "type": "step.task_start",
+  "type": "task.start",
   "verb": "GET"
 }

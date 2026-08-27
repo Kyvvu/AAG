@@ -46,10 +46,10 @@
     "type": {
       "type": "string",
       "enum": [
-        "step.task_start",
-        "step.task_end",
-        "step.task_error",
-        "step.task_idle",
+        "task.start",
+        "task.end",
+        "task.error",
+        "task.idle",
         "step.resource",
         "step.message",
         "step.self",
@@ -91,7 +91,7 @@
       "if": {
         "properties": {
           "type": {
-            "const": "step.task_start"
+            "const": "task.start"
           }
         },
         "required": [
@@ -108,7 +108,7 @@
       "if": {
         "properties": {
           "type": {
-            "const": "step.task_end"
+            "const": "task.end"
           }
         },
         "required": [
@@ -125,7 +125,7 @@
       "if": {
         "properties": {
           "type": {
-            "const": "step.task_error"
+            "const": "task.error"
           }
         },
         "required": [
@@ -142,7 +142,7 @@
       "if": {
         "properties": {
           "type": {
-            "const": "step.task_idle"
+            "const": "task.idle"
           }
         },
         "required": [
@@ -334,7 +334,7 @@
         "not": {
           "properties": {
             "type": {
-              "const": "step.task_start"
+              "const": "task.start"
             }
           }
         }

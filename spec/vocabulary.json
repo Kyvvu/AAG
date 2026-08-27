@@ -4,6 +4,15 @@
   "name": "Agent Action Grammar",
   "license": "CC-BY-4.0",
   "spec": "../docs/model.md",
+  "granularity": {
+    "derived": true,
+    "derived_from": "type",
+    "rule": "The segment of the action `type` before the first '.'.",
+    "values": [
+      "task",
+      "step"
+    ]
+  },
   "verbs": {
     "GET": {
       "meaning": "Data enters the task; nothing task-resident meaningfully leaves."
@@ -19,19 +28,19 @@
     }
   },
   "action_types": {
-    "step.task_start": {
+    "task.start": {
       "verbs": [],
       "meaning": "Opens a task; establishes a fresh memory scope, nothing carried from prior tasks. May carry agent context (see properties)."
     },
-    "step.task_end": {
+    "task.end": {
       "verbs": [],
       "meaning": "Closes a task; the memory scope ends. Nothing implicitly survives into another task."
     },
-    "step.task_error": {
+    "task.error": {
       "verbs": [],
       "meaning": "The task reached an abnormal state. A lifecycle marker; the task may resume afterwards."
     },
-    "step.task_idle": {
+    "task.idle": {
       "verbs": [],
       "meaning": "The task is paused (e.g. awaiting input). Memory persists across the idle period."
     },
@@ -101,7 +110,7 @@
       "layer": "positioning",
       "required": false,
       "only_on": [
-        "step.task_start"
+        "task.start"
       ],
       "meaning": "The task_id of the task that spawned this one."
     },
@@ -140,7 +149,7 @@
       "layer": "classification",
       "required": false,
       "only_on": [
-        "step.task_start"
+        "task.start"
       ],
       "meaning": "The AAG version the stream conforms to."
     },
@@ -167,7 +176,7 @@
       "target": "The resource an action reaches.",
       "auth": "The authority an action runs under.",
       "data": "The data an action handles.",
-      "agent": "Information about the agent itself (carried on step.task_start).",
+      "agent": "Information about the agent itself (carried on task.start).",
       "counterpart": "Who is on the other end of a step.message.",
       "transport": "Freeform: the mechanics of a call (protocol, latency, status codes). No defined leaves.",
       "raw": "Freeform: the emitter's untranslated native record. No defined leaves."

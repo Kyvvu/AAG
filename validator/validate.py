@@ -12,7 +12,7 @@ Each FILE is one of:
 
 Every action is checked against ``spec/action.schema.json``. A task additionally
 checks a few structural invariants: one shared ``task_id`` (an error), and — as
-warnings — that it begins with ``step.task_start``, that any ``step.task_end`` is last, and
+warnings — that it begins with ``task.start``, that any ``task.end`` is last, and
 that ``seq`` values are non-decreasing.
 
 Exit code is non-zero if any file has errors. Depends on ``jsonschema`` and the
@@ -82,10 +82,10 @@ def validate_task(actions: list[Any]) -> tuple[list[str], list[str]]:
         errors.append(f"a task must share one task_id; found {sorted(str(t) for t in task_ids)}")
 
     types = [a.get("type") for a in actions if isinstance(a, dict)]
-    if types and types[0] != "step.task_start":
-        warnings.append(f"task does not begin with step.task_start (first is {types[0]!r})")
-    if "step.task_end" in types and types[-1] != "step.task_end":
-        warnings.append("a step.task_end is present but is not the last action")
+    if types and types[0] != "task.start":
+        warnings.append(f"task does not begin with task.start (first is {types[0]!r})")
+    if "task.end" in types and types[-1] != "task.end":
+        warnings.append("a task.end is present but is not the last action")
 
     seqs = [a["seq"] for a in actions if isinstance(a, dict) and "seq" in a]
     if seqs != sorted(seqs):
