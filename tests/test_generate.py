@@ -31,25 +31,26 @@ def test_emitted_schema_is_valid_json_schema() -> None:
     Draft202012Validator.check_schema(json.loads(generate.SCHEMA_PATH.read_text()))
 
 
-def test_consistency_catches_type_outside_the_step_namespace() -> None:
-    """Every action type name must use the ``step.`` prefix."""
+def test_consistency_catches_undeclared_granularity_prefix() -> None:
     spec = copy.deepcopy(generate.load())
-    spec["action_types"]["plan.sketch"] = spec["action_types"].pop("step.task_idle")
-    assert any("'step.' namespace" in e for e in generate.check_consistency(spec))
+    spec["action_types"]["plan.sketch"] = spec["action_types"].pop("task.idle")
+    assert any("not a declared granularity" in e for e in generate.check_consistency(spec))
 
 
-def test_consistency_rejects_retired_granularity_on_action_type() -> None:
-    """Unsupported action-type metadata fails the consistency check."""
+def test_consistency_catches_granularity_restated_on_action_type() -> None:
+    # `granularity` is derived from the type prefix; carrying it on an action
+    # type would let the two disagree, so the checker must reject it.
     spec = copy.deepcopy(generate.load())
-    spec["action_types"]["step.task_start"]["granularity"] = "step"
-    assert any("not valid action-type keys" in e for e in generate.check_consistency(spec))
+    spec["action_types"]["task.start"]["granularity"] = "step"
+    assert any("derived from the type prefix" in e for e in generate.check_consistency(spec))
 
 
 def test_consistency_rejects_legacy_scope_field() -> None:
-    # Unsupported action-type metadata must fail loudly rather than be ignored.
+    # AAG <=0.5.0 drafts carried `scope: task|step` per action type. It is gone;
+    # a source still carrying it must fail loudly rather than be ignored.
     spec = copy.deepcopy(generate.load())
-    spec["action_types"]["step.task_start"]["scope"] = "task"
-    assert any("not valid action-type keys" in e for e in generate.check_consistency(spec))
+    spec["action_types"]["task.start"]["scope"] = "task"
+    assert any("derived from the type prefix" in e for e in generate.check_consistency(spec))
 
 
 def test_consistency_catches_bad_verb() -> None:
@@ -60,7 +61,7 @@ def test_consistency_catches_bad_verb() -> None:
 
 def test_consistency_catches_wrong_type_count() -> None:
     spec = copy.deepcopy(generate.load())
-    del spec["action_types"]["step.task_idle"]
+    del spec["action_types"]["task.idle"]
     assert any("12 action types" in e for e in generate.check_consistency(spec))
 
 

@@ -4,7 +4,7 @@
   "seq": 0,
   "timestamp": "2026-07-30T09:14:20Z",
   "step_name": "handle_support_ticket_4821",
-  "type": "step.task_start",
+  "type": "task.start",
   "aag_version": "0.5.0",
   "properties": {
     "agent": {
