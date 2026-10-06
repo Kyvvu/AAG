@@ -126,11 +126,15 @@ Paths](https://arxiv.org/abs/2603.16586)*.)
 
 ## Nearby efforts
 
-- **[OpenTelemetry's GenAI conventions](https://github.com/open-telemetry/semantic-conventions-genai)**, and **[OWASP AOS](https://owasp.org/www-project-agent-observability-standard-2/)** / the **[Agent Control
-  Standard (ACS)](https://agentcontrolstandard.org/)** that extend OpenTelemetry and OCSF, are observability schemas
-  with an open surface. None defines a closed action enumeration, an
-  intended/completed distinction, or a task-memory model — the parts a security
-  policy is written against.
+- **[OpenTelemetry's GenAI conventions](https://github.com/open-telemetry/semantic-conventions-genai)** and **[OWASP AOS](https://owasp.org/www-project-agent-observability-standard-2/)**, which extend OpenTelemetry and OCSF, are
+  observability schemas with an open surface. None defines a closed action
+  enumeration, an intended/completed distinction, or a task-memory model — the
+  parts a security policy is written against.
+- The **[Agent Control Standard (ACS)](https://agentcontrolstandard.org/)** is the nearest neighbour: a runtime-control
+  standard — a pre-action hook plus a Guardian that answers it — not an
+  observability schema. It leaves the action vocabulary open, where AAG supplies
+  the closed, security-meaningful description of the step the loop decides on. A
+  full mapping is in [`../docs/acs-mapping.md`](../docs/acs-mapping.md).
 - **[AGNTCY's OASF](https://docs.agntcy.org/oasf/open-agentic-schema-framework/)** describes what an agent *is* (capabilities, metadata); AAG
   describes what it *did*. The two are complementary.
 
