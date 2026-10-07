@@ -4,7 +4,7 @@
 
 ## Summary
 
-ACS and AAG are two different, but complementary, efforts to standardize reasoning about agent behavior. Both focus on monitoring agent behavior at the level of the agent harness (which should emit its actions). ACS defines the full loop between the harness and a distinct "Guardian": a process that returns a decision on each step. AAG is narrower: it describes solely the behavior of the agent (the steps an agent takes while going about a task). AAG classifies each step more finely than ACS does: a closed set of action types and verbs, and one record shape for a step before and after it runs. ACS carries things AAG does not, among them data lineage per argument and an authenticated approval flow. We propose changes to both ACS and AAG to bring the two together.
+ACS and AAG are two different, but complementary, efforts to standardize reasoning about agent behavior. Both focus on monitoring agent behavior at the level of the agent harness (which should emit its actions). ACS defines the full loop between the harness and a distinct "Guardian": a process that returns a decision on each step. AAG is narrower: it describes solely the behavior of the agent (the steps an agent takes while going about a task). AAG classifies each step more finely than ACS does: a closed set of action types and verbs, and one record shape for a step before and after it runs. ACS carries things AAG does not, among them data lineage per argument and an authenticated approval flow. We propose changes to both ACS and AAG to bring the two closer together.
 
 ## Some context...
 
@@ -25,7 +25,7 @@ AAG asks only "how do we describe an agent's behavior, as it goes about its task
 
 This document positions AAG inside ACS and tries to identify implications, both ways, that in our view would improve both. Ideally, if you ask us, AAG would be included in ACS as the detailed description of what an agent is doing inside the control loop.
 
-To bring AAG and ACS closer together, we are taking a number of proposals to the ACS repository. [Section 6](#6-what-we-take-to-acs) describes them; in short:
+To bring AAG and ACS closer together, we are taking a number of proposals to the ACS repository. [Section 6](#6-discussions-to-extend-acs) describes them; in short:
 
 * The ACS "hook name" and the AAG "type" answer the same question. We propose that ACS hooks cover every AAG type (proposal 1).
 * ACS records the read / write / delete distinction on *some* hooks and not others. We propose it does so on tool calls as well (proposal 2).
@@ -42,13 +42,13 @@ ACS additionally defines the Guardian's answer. On most of it AAG has no opinion
 
 ## 1. The shared backdrop
 
-Underneath both efforts sits one idea: just before an agent takes a step, the harness makes what it is *about to do* explicit, so it can be checked before it happens rather than audited after. AAG and ACS agree on that backdrop entirely: a pre-step description, emitted by the harness.
+Underneath AAG and ACS sits one simple idea: just before an agent takes a step, the harness makes what it is *about to do* explicit, so it can be checked before it happens rather than audited after.
 
 In this context, AAG simply names each step an agent takes: what kind of action, which way data flows, what it touches. That's it. ACS takes the same pre-step moment and builds the whole control loop around it: the step travels as a hook, a Guardian evaluates it against the session so far and returns a decision, and the harness honours that decision. [Section 2](#2-what-acs-does) describes this loop. [Section 3](#3-where-aag-fits) returns to the one piece AAG and ACS both describe, the step itself.
 
 ## 2. What ACS does
 
-This section describes the parts of ACS that the rest of this document relies on, as we read ACS v0.1.0. Where the ACS schemas and the ACS prose disagree we follow the schemas ([section 8](#8-where-the-acs-schemas-and-prose-differ) lists the cases we ran into).
+This section describes ACS in more detail. In the rare cases where the ACS schemas and the ACS prose seem to disagree, we follow the schemas ([section 8](#8-where-the-acs-schemas-and-prose-differ) lists the cases we ran into).
 
 ### Parties
 
@@ -157,11 +157,11 @@ AAG puts the whole classification in `(type, verb)`. ACS spreads it over two pla
 
 So one ACS string holds three things that AAG keeps apart: a type (`process.execute` is `step.exec`), a verb (`read`, `delete`, `egress`) and a property (the domain).
 
-Our first three proposals ([section 6](#6-what-we-take-to-acs)) separate them: the type goes into the hook name, the verb into a closed field, and the target into a `resource` field, with an open object for further properties. We should be clear about what this does to `capability`: with those three in place, a `capability` string on an individual call says nothing the other fields do not already say. `capability` would keep the role those fields cannot fill, which is to declare in advance what a tool or a skill may do, before any call is made. A Guardian then checks what a call does against what was declared.
+Our first three proposals ([section 6](#6-discussions-to-extend-acs)) separate them: the type goes into the hook name, the verb into a closed field, and the target into a `resource` field, with an open object for further properties. It is useful to note what this does to `capability`: with the above three fields in place, a `capability` string on an individual call says nothing the other fields do not already say. `capability` would keep the role those fields cannot fill, which is to declare in advance what a tool or a skill may do, before any call is made. A Guardian then checks what a call does against what was declared.
 
 ## 4. A task, end to end
 
-One short task: a support agent answers a billing question. It reads an internal customer record containing personal data, calls a model, and then tries to send data to an external host before replying.
+Here we provide a running example of both ACS and AAG based on a simple "support agent" answering a billing question. The agent reads an internal customer record containing personal data, calls a model, and then tries to send data to an external host before replying.
 
 | # | What happens | ACS hook | AAG event |
 |---|---|---|---|
@@ -173,12 +173,17 @@ One short task: a support agent answers a billing question. It reads an internal
 | 5 | reply to the user | `agentResponse` | `step.message` `POST` |
 | 6 | task closes | `sessionEnd` | `task.end` |
 
-**Row 3.** ACS has no hook for a model call; #122 proposes one. AAG records the call as `step.model`: context leaves for the model provider, and the completion that comes back is untrusted data.
+A few observations:
 
-**Row 4.** An outbound `POST` (row 4) after an internal read of personal data (row 2) is the shape of an exfiltration. A Guardian can catch it in two ways:
+* **Row 3.** ACS has no hook for a model call; [#122] proposes one. AAG records the call as `step.model`: context leaves for the model provider, and the completion that comes back is untrusted data.
+* **Row 4.** An outbound `POST` (row 4) after an internal read of personal data (row 2) is the shape of an exfiltration. 
 
-- *By lineage.* With ACS-Provenance, the arguments of the outbound call carry `derived_from` links back to the customer record. A rule follows the data.
-- *By path.* Without provenance, the Guardian has seen `datastore.read` and then `network.egress`, and has to know by itself that the first read was internal and contained personal data. AAG puts those two facts on the event, so that a rule over the order of events can use them.
+An ACS Guardian can catch the exfiltration in two ways:
+
+- *By lineage.* Under the optional ACS-Provenance profile, the harness tags each argument of the outbound call with `derived_from` links back to the customer record, and a rule follows the data. This asks the harness to track value-level lineage, which is a real cost.
+- *By path.* Without provenance, the Guardian has seen `datastore.read` and then `network.egress`, and has to know by itself that the first read was internal and contained personal data.
+
+Catching the exfiltration using AAG is more straightforward: AAG puts the two facts directly in the events, so that a rule over the order of events can use them (and one could easily write a generic rule that prevents exfiltration after *any* internal data read).
 
 We see these as complementary. Lineage follows data where it can be tracked. The order of steps still applies where it cannot, for instance once data has passed through the model.
 
@@ -224,7 +229,7 @@ Row 2 in full, first as the ACS hook and then as the AAG event derived from it:
 }
 ```
 
-The hook says that a datastore is read. The AAG event adds that the datastore is internal and that the data is personal. In ACS those two facts are left to the Guardian's policy.
+The hook says that a datastore is read. The AAG event adds that the datastore is internal and that the data is personal. In ACS those two facts seem to be left to the Guardian's policy.
 
 ## 5. The mapping
 
@@ -233,25 +238,25 @@ The table lists every ACS hook and every AAG type. An empty cell means the other
 | ACS | AAG | Note |
 |---|---|---|
 | `sessionStart` | `task.start` | |
-| `subagentStart` | `task.start` with `parent_task_id` | in ACS a subagent always has its own session |
-| `sessionEnd`, `subagentStop` | `task.end` or `task.error` | `task.error` when the ACS `reason` / `outcome` is an error or a timeout |
-| | `task.idle` | |
+| `subagentStart` | same task (shared memory), or `task.start` with `parent_task_id` (own memory) | (AAG) a subagent that shares memory is flattened into one task, varying only `agent_id`; one with its own memory is a new task linked by `parent_task_id` (`model.md` §3.4). (ACS) a subagent always opens its own session |
+| `sessionEnd`, `subagentStop` | `task.end` or `task.error` | (AAG) `task.error` when the ACS `reason` / `outcome` is an error or a timeout |
+| | `task.idle` | (AAG) no ACS counterpart |
 | `userMessage` | `step.message` `GET` | |
-| `agentTrigger` | `step.message` `GET` | the message that started the run |
-| `agentResponse` | `step.message` `POST` | fires before delivery: the intended step |
-| `memoryContextRetrieval` | `step.self` `GET` | fires after the read: the completed step |
-| `memoryStore` | `step.self` `POST` / `PATCH` / `DELETE` | the verb follows `operation` (`create` / `update` / `delete`) |
-| `knowledgeRetrieval` | `step.resource` `GET` | fires after the retrieval: the completed step |
-| `toolCallRequest`, `toolCallResult` | `step.resource` + verb | the verb is not on the hook (proposal 2) |
+| `agentTrigger` | `task.start` context, or `step.message` `GET` if the trigger is a message | (ACS) a trigger may be a user message, a schedule, or a system event; (AAG) only a message-bearing trigger is a `step.message` — a scheduled or system start is just `task.start` |
+| `agentResponse` | `step.message` `POST` | (ACS) fires before delivery, so the intended step |
+| `memoryContextRetrieval` | `step.self` `GET` | (ACS) fires after the read, so the completed step |
+| `memoryStore` | `step.self` `POST` / `PATCH` / `DELETE` | (AAG) the verb follows the ACS `operation` (`create` / `update` / `delete`) |
+| `knowledgeRetrieval` | `step.resource` `GET` | (ACS) fires after the retrieval, so the completed step |
+| `toolCallRequest`, `toolCallResult` | `step.resource` + verb | (ACS) the verb is not on the hook (proposal 2) |
 | `protocols/MCP/tools/call`, `protocols/MCP/resources/read` | `step.resource` + verb | |
-| `toolCallRequest` with `capability: process.execute` | `step.exec` | identified only by an optional string (proposal 1) |
-| `toolCallRequest` | `step.credential` | ACS has no name for it (proposal 1) |
-| | `step.model` | no hook (proposal 1) |
+| `toolCallRequest` with `capability: process.execute` | `step.exec` | (ACS) identified only by an optional `capability` string (proposal 1) |
+| `toolCallRequest` | `step.credential` | (ACS) no capability name for it (proposal 1) |
+| | `step.model` | (ACS) no hook (proposal 1) |
 | the `ask` decision (not a hook) | `step.gate` | [section 5.3](#53-approval-a-decision-in-acs-a-step-in-aag), proposal 4 |
 | `toolCallRequest` without `capability` | `step.unknown` | |
 | `turnStart`, `turnEnd` | | [section 5.4](#54-acs-hooks-without-an-aag-type) |
 | `preCompact`, `postCompact` | | [section 5.4](#54-acs-hooks-without-an-aag-type) |
-| `skillRegister`, `skillLoad`, `skillUnload` | | [section 5.4](#54-acs-hooks-without-an-aag-type) |
+| `skillRegister`, `skillLoad`, `skillUnload` | `step.self` or `step.resource` (no dedicated type) | (AAG) could be `step.self` (the agent changing its own capabilities) or `step.resource` (fetching a definition); a dedicated type is optional ([section 5.4](#54-acs-hooks-without-an-aag-type)) |
 
 ### 5.1 Verbs
 
@@ -274,38 +279,38 @@ ACS sends code execution, access to secrets, file operations and network calls t
 - **A missing label is ambiguous.** When `capability` is absent, a Guardian cannot tell "no code was executed" from "this harness does not label code execution". A hook name does not have this problem: the harness declares its hooks at the start of the session, so the Guardian knows what it can expect to see.
 - **Each class has controls of its own.** Code execution calls for sandboxing and an allowed-command list. Access to a secret calls for rules on who may read which secret. A model call sends the context to a provider and returns untrusted text. A rule can only apply the right control if it knows which class it is looking at.
 
-ACS's position, as we read it in #153, is that `capability` can already name code execution, and that the open problem is that the field is optional. Making `capability` required and enumerated would address the second reason above. It would leave type, verb and domain combined in one string ([section 3.1](#31-acs-classifies-a-step-in-two-places)).
+ACS's position, as we read it in [#153], is that `capability` can already name code execution, and that the open problem is that the field is optional. Making `capability` required and enumerated would address the second reason above. It would leave type, verb and domain combined in one string ([section 3.1](#31-acs-classifies-a-step-in-two-places)).
 
 The model call is a separate case: ACS has no hook and no `capability` value for it.
 
 ### 5.3 Approval: a decision in ACS, a step in AAG
 
-In AAG, an approval (by a human or by an automated check) is a step: `step.gate`. A policy that says "a human must approve first" requires that a `step.gate` appears on the path before the sensitive action. The harness emits the gate, like any other step.
+In AAG, an approval (by a human or by an automated check) is a step: `step.gate`. A policy that says "a human must approve first" requires that a `step.gate` appears on the path before the sensitive action. The harness emits the gate, like any other step. 
 
 In ACS, the same intent is a decision. The Guardian returns `ask`, and an Approver is consulted. That consultation is not a hook.
 
-In our view an approval is something that happens on the agent's path, whoever asked for it. Harnesses already run approvals that no Guardian asked for: a permission prompt in a coding agent, an interrupt in a workflow. ACS cannot see these today, so a Guardian cannot require one.
+In our view an approval is something that happens on the agent's path, whoever asked for it. Harnesses already run approvals that no Guardian asked for: a permission prompt in a coding agent, an interrupt in a workflow. ACS cannot see these today, so a Guardian cannot require one. 
 
-We do not propose removing `ask`. We propose that every approval, however it came about, can be recorded as a step (proposal 4). A policy engine working on the path then needs only `allow` and `deny` from ACS: it denies the sensitive step until a gate has been recorded.
+We do not propose removing `ask` as a guardian output. Rather, we propose that every approval, however it came about, can be recorded as a step (proposal 4). A policy engine working on the path then needs only `allow` and `deny` from ACS: it denies the sensitive step until a gate has been recorded.
 
-Two ACS decisions have no counterpart in AAG. `defer` describes a Guardian that has not reached a verdict; nothing happens on the agent's path while it waits. `modify` changes a step from the Guardian's side.
+Two ACS decisions have no counterpart in AAG. `defer` describes a Guardian that has not reached a verdict; nothing happens on the agent's path while it waits. `modify` changes a step from the Guardian's side; this is not a behavior currently covered by AAG; in AAG's philosophy the Guardian is simple (and inspectable); complex changes to proposed tool calls should not be determined by a checkable Guardian.
 
 ### 5.4 ACS hooks without an AAG type
 
-- **Turns.** In AAG, what an agent has read stays relevant for the whole task, so a turn is not a boundary. ACS uses turns in policies, for example a limit on tool calls per turn. Such rules cannot be written over AAG events today ([section 7](#7-what-aag-can-take-from-acs)).
+- **Turns.** ACS has three scopes: session, turn, step. A turn is one cycle of agent work inside a session — started by a user message, an auto-continuation, an agent loop, or a subagent returning — and context carries across turns. AAG has two scopes, task and step; the nearest counterpart of the ACS session is the task, and AAG has no turn level between the two. A turn that a user message starts is already visible in AAG as the `step.message GET` that received it, so a rule can find that boundary; a turn started by an auto-continuation or an agent loop is not marked. AAG also carries taint across the whole task, so ACS's own example — "deny consequential actions after a turn that retrieved untrusted data" — holds in AAG by default; what AAG cannot express is a per-turn count or limit, because it does not group steps into turns.
 - **Compaction.** ACS attaches provenance to content. Compaction rewrites content, so ACS needs hooks around it to carry the provenance over. AAG records the path outside the model's context, so compacting that context does not change the path.
-- **Skills.** Once a skill is loaded, its actions appear as ordinary steps. Registering and loading a skill has no AAG type ([section 7](#7-what-aag-can-take-from-acs)).
+- **Skills.** Once a skill is loaded, its actions appear as ordinary steps. Registering or loading a skill has no dedicated AAG type today; it would be a `step.self` (the agent changing its own capabilities) or a `step.resource` (fetching a definition). A type of its own is optional, and something we might add ([section 7](#7-what-aag-can-take-from-acs)).
 
-## 6. What we take to ACS
+## 6. Discussions to extend ACS
 
-Four proposals. ACS asks that changes to the specification start as a Discussion, so that is where they go; each has a draft in this folder.
+We bring four proposals to ACS based on this mapping. We describe them here generically; more detail is in the discussion items on the ACS repo.
 
-1. **A hook per class of action.** Code execution and access to secrets each get a hook of their own, so that the class is in the hook name ([section 5.2](#52-why-a-type-per-class-of-action)). A model call gets a hook, since ACS has none. The model-call part is a comment on the existing #122; the other part relates to `tool_kind` in #153. → [`issue-1-typed-hooks.md`](issue-1-typed-hooks.md)
-2. **A closed field for the verb on tool calls.** `read`, `create`, `update` or `delete`, next to the existing `operation` field and not replacing it ([section 5.1](#51-verbs)). → [`issue-2-operation-enum.md`](issue-2-operation-enum.md)
-3. **`resource`, and a place for properties.** A `resource` field on tool calls, and an open object for further properties a harness can supply. This proposal also describes what proposals 1 to 3 together mean for `capability` ([section 3.1](#31-acs-classifies-a-step-in-two-places)). Related: #8, which proposes trust and sensitivity metadata on tools and is deferred to ACS v0.2.0. → [`issue-3-capability-cleanup.md`](issue-3-capability-cleanup.md)
-4. **Approvals as recorded steps.** A hook the harness emits when it has run an approval or a check itself, and an entry in the Guardian's record for every resolved `ask` ([section 5.3](#53-approval-a-decision-in-acs-a-step-in-aag)). Related: #175 and Discussion #115. → [`issue-4-gate-step.md`](issue-4-gate-step.md)
+1. **A hook per class of action.** Code execution and access to secrets each get a hook of their own, so that the class is in the hook name ([section 5.2](#52-why-a-type-per-class-of-action)). A model call gets a hook, since ACS has none. The model-call part is a comment on the existing [#122] in the ACS repo; the other part relates to `tool_kind` in [#153].
+2. **A closed field for the verb on tool calls.** `read`, `create`, `update` or `delete`, next to the existing `operation` field and not replacing it ([section 5.1](#51-verbs)). 
+3. **`resource`, and a place for properties.** A `resource` field on tool calls, and an open object for further properties a harness can supply. This proposal also describes what proposals 1 to 3 together mean for `capability` ([section 3.1](#31-acs-classifies-a-step-in-two-places)). Related: [#8], which proposes trust and sensitivity metadata on tools and is deferred to ACS v0.2.0.
+4. **Approvals as recorded steps.** A hook the harness emits when it has run an approval or a check itself, and an entry in the Guardian's record for every resolved `ask` ([section 5.3](#53-approval-a-decision-in-acs-a-step-in-aag)). Related: [#175] and Discussion [#115].
 
-While reading ACS we also noticed that the three skill hooks are missing from its OpenTelemetry and OCSF mapping. ACS already tracks this (#57, #58), so we do not raise it.
+While reading ACS we also noticed that the three skill hooks are missing from its OpenTelemetry and OCSF mapping. ACS already tracks this ([#57], [#58]), so we do not raise it.
 
 ## 7. What AAG can take from ACS
 
@@ -313,23 +318,35 @@ The influence runs both ways. Each item below is a possible change to AAG and a 
 
 | Possible change to AAG | What ACS shows |
 |---|---|
-| A link between an action and the data it was derived from | ACS-Provenance carries `derived_from` per argument. AAG records the order of steps, not where the data in a step came from |
-| An optional turn marker | ACS policies can count and reset per turn ([section 5.4](#54-acs-hooks-without-an-aag-type)) |
+| Value-level data lineage: which earlier values a value came from | ACS-Provenance's `derived_from` records this per content item. AAG instead assumes every earlier read in a task is potentially present in every later step (monotonic taint, `model.md` §3.1), so it does not track value-to-value lineage. Adding it would be a refinement, at a tracking cost to the harness |
 | A type for registering and loading a skill | ACS has hooks for this ([section 5.4](#54-acs-hooks-without-an-aag-type)) |
-| Marking which properties the harness observed and which it only asserts | ACS distinguishes facts that are asserted, attached by framework code, or cryptographically attested (`docs/concepts/trust.md`). RFC-0001 has this as an open question |
-| An optional hash link from each action to the previous one | ACS chains the entries of its session record this way, which makes the record tamper-evident |
+| Marking which facts the harness observed, which it merely asserts, and which are cryptographically attested | AAG today trusts every step and property once a harness has emitted it. ACS names three levels — asserted, attached by framework code, attested (`docs/concepts/trust.md`). Worth improving; RFC-0001 has it as an open question |
+| A hash link from each action to the previous one (we intend to add this to AAG) | ACS chains the entries of its session record this way, which makes the record tamper-evident |
 | How a blocked action is recorded | ACS records the `deny` decision, and `toolCallResult` has an `exit_status` of `blocked`. RFC-0001 has this as an open question |
 | A way to state the AAG version for a whole stream | The ACS handshake negotiates the version once per session. RFC-0001 has this as an open question |
 
 ## 8. Where the ACS schemas and prose differ
 
-We followed the schemas. These are the cases we ran into:
+We tried to follow the schemas. Here are a few cases that seem ambiguous — prose on one side, schema on the other:
 
-- `capability` is a string on `toolCallRequest` and in the AgBOM, but a `{tool, operation, resource}` tuple in `Intent.parsed`.
-- `toolCallRequest`: `hooks.md` lists the payload as `tool` (id, capability); the schema has `tool.name` and a separate `capability` field (#197).
-- `toolCallResult`: `hooks.md` says `execution_id`; the schema says `request_id_ref`.
-- `signature` is optional in the schema; the specification says it is required (#195).
-- `acs_version` is top-level in the specification text and inside `params` in the schema (#194).
-- `sessionEnd`: `hooks.md` says `session_reason`; the schema says `reason`.
+| Area | ACS prose | ACS schema | Tracked |
+|---|---|---|---|
+| `capability` shape | a string, independent of the tool (`concepts/capability.md`) | a string on `tool-call-request.json` and `agbom/component.json`, but a `{tool, operation, resource}` tuple in `agent-trigger.json` (`Intent.parsed`) and `ask-details.json` (`intent_extension`) | — |
+| `toolCallRequest.tool` | `tool` (id, capability) (`hooks.md`) | `tool.name`, with `capability` a separate field (`tool-call-request.json`) | [#197] |
+| `toolCallResult` id | `execution_id` (`hooks.md`) | `request_id_ref` (`tool-call-result.json`) | — |
+| `signature` | REQUIRED in ACS-Core (specification §10) | optional (`request-envelope.json`) | [#195] |
+| `acs_version` | top-level (specification §3) | inside `params` (`request-envelope.json`) | [#194] |
+| `sessionEnd` reason | `session_reason` (`hooks.md`) | `reason` (`session-end.json`) | — |
 
 This mapping will follow ACS as it develops.
+
+[#8]: https://github.com/GenAI-Security-Project/agent-control-standard/issues/8
+[#57]: https://github.com/GenAI-Security-Project/agent-control-standard/issues/57
+[#58]: https://github.com/GenAI-Security-Project/agent-control-standard/issues/58
+[#115]: https://github.com/GenAI-Security-Project/agent-control-standard/discussions/115
+[#122]: https://github.com/GenAI-Security-Project/agent-control-standard/issues/122
+[#153]: https://github.com/GenAI-Security-Project/agent-control-standard/issues/153
+[#175]: https://github.com/GenAI-Security-Project/agent-control-standard/issues/175
+[#194]: https://github.com/GenAI-Security-Project/agent-control-standard/issues/194
+[#195]: https://github.com/GenAI-Security-Project/agent-control-standard/issues/195
+[#197]: https://github.com/GenAI-Security-Project/agent-control-standard/issues/197
