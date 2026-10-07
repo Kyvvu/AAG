@@ -24,3 +24,6 @@ venv/
 
 # OS
 .DS_Store
+
+# Local scratch / working drafts (not tracked)
+tmp/
