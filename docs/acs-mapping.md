@@ -297,13 +297,13 @@ Two ACS decisions have no counterpart in AAG. `defer` describes a Guardian that 
 
 ### 5.4 ACS hooks without an AAG type
 
-- **Turns.** ACS has three scopes: session, turn, step. A turn is one cycle of agent work inside a session — started by a user message, an auto-continuation, an agent loop, or a subagent returning — and context carries across turns. AAG has two scopes, task and step; the nearest counterpart of the ACS session is the task, and AAG has no turn level between the two. A turn that a user message starts is already visible in AAG as the `step.message GET` that received it, so a rule can find that boundary; a turn started by an auto-continuation or an agent loop is not marked. AAG also carries taint across the whole task, so ACS's own example — "deny consequential actions after a turn that retrieved untrusted data" — holds in AAG by default; what AAG cannot express is a per-turn count or limit, because it does not group steps into turns.
+- **Turns.** ACS has three scopes: session, turn, step. A turn is one cycle of agent work inside a session — started by a user message, an auto-continuation, an agent loop, or a subagent returning — and context carries across turns. AAG has two scopes, task and step; the nearest counterpart of the ACS session is the task, and AAG has no turn level between the two. A turn that a user message starts is already visible in AAG as the `step.message GET` that received it, so a rule can find that boundary; a turn started by an auto-continuation or an agent loop is not marked. AAG also carries taint across the whole task, so ACS's own example — "deny consequential actions in any turn after a turn that retrieved untrusted data" — holds in AAG by default; what AAG cannot express is a per-turn count or limit, because it does not group steps into turns.
 - **Compaction.** ACS attaches provenance to content. Compaction rewrites content, so ACS needs hooks around it to carry the provenance over. AAG records the path outside the model's context, so compacting that context does not change the path.
 - **Skills.** Once a skill is loaded, its actions appear as ordinary steps. Registering or loading a skill has no dedicated AAG type today; it would be a `step.self` (the agent changing its own capabilities) or a `step.resource` (fetching a definition). A type of its own is optional, and something we might add ([section 7](#7-what-aag-can-take-from-acs)).
 
 ## 6. Discussions to extend ACS
 
-We bring four proposals to ACS based on this mapping. We describe them here generically; more detail is in the discussion items on the ACS repo.
+We bring four proposals to ACS based on this mapping. We describe them here generically; more detail is in the threads on the ACS repo: the comment on [#122] (model call), Discussion [#232] (proposals 1 to 3) and Discussion [#231] (proposal 4).
 
 1. **A hook per class of action.** Code execution and access to secrets each get a hook of their own, so that the class is in the hook name ([section 5.2](#52-why-a-type-per-class-of-action)). A model call gets a hook, since ACS has none. The model-call part is a comment on the existing [#122] in the ACS repo; the other part relates to `tool_kind` in [#153].
 2. **A closed field for the verb on tool calls.** `read`, `create`, `update` or `delete`, next to the existing `operation` field and not replacing it ([section 5.1](#51-verbs)). 
@@ -348,5 +348,7 @@ This mapping will follow ACS as it develops.
 [#153]: https://github.com/GenAI-Security-Project/agent-control-standard/issues/153
 [#175]: https://github.com/GenAI-Security-Project/agent-control-standard/issues/175
 [#194]: https://github.com/GenAI-Security-Project/agent-control-standard/issues/194
+[#231]: https://github.com/GenAI-Security-Project/agent-control-standard/discussions/231
+[#232]: https://github.com/GenAI-Security-Project/agent-control-standard/discussions/232
 [#195]: https://github.com/GenAI-Security-Project/agent-control-standard/issues/195
 [#197]: https://github.com/GenAI-Security-Project/agent-control-standard/issues/197
