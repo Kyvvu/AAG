@@ -22,7 +22,7 @@ def _act(**fields: Any) -> dict[str, Any]:
         "task_id": "t",
         "timestamp": "2026-01-01T00:00:00Z",
         "step_name": "x",
-        "type": "step.exec",
+        "kind": "step.exec",
     }
     base.update(fields)
     return base
@@ -57,7 +57,7 @@ def test_valid_action_no_errors() -> None:
 
 
 def test_invalid_action_has_errors() -> None:
-    assert validate.validate_action(_act(verb="GET"), VALIDATOR, "a")  # verb on a verbless type
+    assert validate.validate_action(_act(verb="GET"), VALIDATOR, "a")  # verb on a verbless kind
 
 
 def test_malformed_timestamp_is_rejected() -> None:
@@ -77,22 +77,22 @@ def test_task_mixed_task_id_is_error() -> None:
 
 
 def test_task_out_of_order_seq_warns() -> None:
-    _, warnings = validate.validate_task([_act(type="task.start", seq=1), _act(seq=0)])
+    _, warnings = validate.validate_task([_act(kind="task.start", seq=1), _act(seq=0)])
     assert any("non-decreasing" in w for w in warnings)
 
 
 def test_task_missing_start_warns() -> None:
-    _, warnings = validate.validate_task([_act(type="step.exec")])
+    _, warnings = validate.validate_task([_act(kind="step.exec")])
     assert any("does not begin with task.start" in w for w in warnings)
 
 
 def test_task_end_not_last_warns() -> None:
-    _, warnings = validate.validate_task([_act(type="task.start"), _act(type="task.end"), _act()])
+    _, warnings = validate.validate_task([_act(kind="task.start"), _act(kind="task.end"), _act()])
     assert any("not the last action" in w for w in warnings)
 
 
 def test_clean_task_has_no_issues() -> None:
-    actions = [_act(type="task.start", seq=0), _act(seq=1), _act(type="task.end", seq=2)]
+    actions = [_act(kind="task.start", seq=0), _act(seq=1), _act(kind="task.end", seq=2)]
     errors, warnings = validate.validate_task(actions)
     assert errors == []
     assert warnings == []

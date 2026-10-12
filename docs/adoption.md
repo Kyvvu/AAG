@@ -29,16 +29,16 @@ agent in the `agent` group:
 
 ```json
 { "agent_id": "…", "task_id": "run-…", "timestamp": "…", "step_name": "…",
-  "type": "task.start", "aag_version": "0.5.0",
+  "kind": "task.start", "aag_version": "0.6.0",
   "properties": { "agent": { "risk_classification": "…", "purpose": "…", "environment": "…" } } }
 ```
 
 ## Step 2 — classify each operation
 
-In the pre-action hook, decide the action's **type** and **verb**. The mapping
+In the pre-action hook, decide the action's **kind** and **verb**. The mapping
 is mechanical:
 
-| the harness is about to… | type | verb |
+| the harness is about to… | kind | verb |
 |--------------------------|------|------|
 | call a model | `step.model` | — |
 | call an external tool / API, or read a file | `step.resource` | `GET` to read, `POST`/`PATCH`/`DELETE` to write |
@@ -60,7 +60,7 @@ the action **intended**:
 
 ```json
 { "agent_id": "…", "task_id": "run-…", "action_id": "act-…", "timestamp": "…",
-  "step_name": "get_customer_record", "type": "step.resource", "verb": "GET",
+  "step_name": "get_customer_record", "kind": "step.resource", "verb": "GET",
   "input": { "customer_id": "C-4821" },
   "properties": { "target": { "trust": "internal", "host": "crm.internal" },
                   "data": { "classification": "pii" } } }
@@ -76,7 +76,7 @@ a completed action — put the error in `output` ([`model.md`](model.md) §2.5):
 
 ```json
 { "agent_id": "…", "task_id": "run-…", "action_id": "act-…", "seq": 3, "timestamp": "…",
-  "step_name": "get_customer_record", "type": "step.resource", "verb": "GET",
+  "step_name": "get_customer_record", "kind": "step.resource", "verb": "GET",
   "input": { "customer_id": "C-4821" },
   "output": { "status": "ok" },
   "properties": { "target": { "trust": "internal", "host": "crm.internal" },
@@ -89,7 +89,7 @@ Emit `task.end` to close the task normally. Use `task.error` if the run terminat
 
 ## Properties carry the security meaning
 
-The `type` and `verb` give the baseline; the `properties` are what a security
+The `kind` and `verb` give the baseline; the `properties` are what a security
 policy would mostly act upon. Attach what you know at emit time — the trust and host of a
 resource (`target.trust`, `target.host`), the sensitivity of the data
 (`data.classification`), who is on the other end of a message

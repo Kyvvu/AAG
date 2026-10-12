@@ -4,7 +4,7 @@
   "action_id": "act-51c2",
   "timestamp": "2026-07-30T09:14:22Z",
   "step_name": "get_customer_record",
-  "type": "step.resource",
+  "kind": "step.resource",
   "verb": "GET",
   "input": { "customer_id": "C-4821" },
   "properties": {

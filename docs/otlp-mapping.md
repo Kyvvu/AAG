@@ -3,7 +3,7 @@
 > **AAG is for security; OTLP is for observability.** Two things AAG carries that an OTLP trace does not:
 >
 > 1. the **intended action** — an action described *before* it executes, so a security layer can allow or deny it. An OTLP span is, by construction, a record of something that already happened.
-> 2. a **closed vocabulary** — AAG's action types and verbs are a fixed set; OTLP span names are an open surface, so once projected the vocabulary is advisory, not enforced.
+> 2. a **closed vocabulary** — AAG's action kinds and verbs are a fixed set; OTLP span names are an open surface, so once projected the vocabulary is advisory, not enforced.
 >
 > This mapping is therefore one-directional and lossy on purpose. Use the AAG to secure a task *as it runs*; then — once the task is done and you hold the whole thing — it is natural to log and observe it. That is what this document is for: handing a finished task to your observability stack.
 
@@ -24,17 +24,19 @@ A **task** becomes a **trace**; each **action** becomes a **span** under a singl
 | a task (actions sharing `task_id`) | one **trace** | |
 | `task_id` | `trace_id` (derived) + `aag.task_id` | stable derivation so a task's spans share a trace |
 | an action | one **span**, child of the task root | |
-| `type` | span **name** + `aag.type` | e.g. `step.model`; append `step_name` for readability |
-| `verb` | `aag.verb` | absent for verbless types |
+| `kind` | span **name** + `aag.kind` | e.g. `step.model`; append `step_name` for readability |
+| `verb` | `aag.verb` | absent for verbless kinds |
 | `seq` | span order + `aag.seq` | |
 | `timestamp` | span **start** (and end — zero duration) | |
 | `agent_id` | `aag.agent_id` | |
 | `step_name` | `aag.step_name` | |
 | `action_id` | `aag.action_id` | ties an intended action to its completion, if both are logged |
 | `parent_task_id` | span **link** to the parent trace | sub-agent / multi-agent |
-| `properties.<group>.<leaf>` | `aag.<group>.<leaf>` (flattened) | e.g. `aag.target.trust`, `aag.data.classification` |
-| a bare leaf (`command`, `kind`) | `aag.<leaf>` | |
+| `properties.<group>.<leaf>` | `aag.properties.<group>.<leaf>` (flattened) | e.g. `aag.properties.target.trust`, `aag.properties.data.classification` |
+| a bare leaf (`command`, `kind`) | `aag.properties.<leaf>` | e.g. `aag.properties.command` |
 | `input` / `output` | `aag.input` / `aag.output`, or a span **event** | optional; may be summarized or omitted (privacy — see the RFC) |
+
+Properties are open, so every property-derived attribute sits under `aag.properties.`. The attributes for the action's own fields (`aag.kind`, `aag.verb`, `aag.seq`, `aag.step_name`, `aag.agent_id`, `aag.task_id`, `aag.action_id`, `aag.input`, `aag.output`) and the policy results under `aag.policy.*` (below) are reserved, and no property can produce one of them — a property named `verb`, a group named `policy` or the bare `kind` leaf on a `step.gate` lands at `aag.properties.verb`, `aag.properties.policy.*` and `aag.properties.kind`.
 
 **Reusing OTel semantic conventions.** Where a property has a natural OTel equivalent you *may* also emit the standard attribute, for tools that speak plain OTel — for example `target.host` → `server.address`, or a `step.model`'s provider and name → `gen_ai.system` / `gen_ai.request.model`. 
 
@@ -65,7 +67,7 @@ A completed `step.resource` GET:
 ```json
 { "agent_id": "support-assistant", "task_id": "run-9f2ac1", "seq": 3,
   "timestamp": "2026-07-30T09:14:23Z", "step_name": "get_customer_record",
-  "type": "step.resource", "verb": "GET",
+  "kind": "step.resource", "verb": "GET",
   "properties": { "target": { "trust": "internal", "host": "crm.internal" },
                   "data": { "classification": "pii" } } }
 ```
@@ -79,12 +81,12 @@ attributes:
   aag.task_id             = run-9f2ac1
   aag.agent_id            = support-assistant
   aag.seq                 = 3
-  aag.type                = step.resource
+  aag.kind                = step.resource
   aag.verb                = GET
   aag.step_name           = get_customer_record
-  aag.target.trust        = internal
-  aag.target.host         = crm.internal
-  aag.data.classification = pii
-  aag.policy.decision     = allow          # from the security layer, if any
-  server.address          = crm.internal   # optional OTel-semconv courtesy
+  aag.properties.target.trust        = internal
+  aag.properties.target.host         = crm.internal
+  aag.properties.data.classification = pii
+  aag.policy.decision                = allow          # from the security layer, if any
+  server.address                     = crm.internal   # optional OTel-semconv courtesy
 ```

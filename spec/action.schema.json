@@ -2,14 +2,14 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$comment": "GENERATED from vocabulary.yaml — do not edit by hand (run: python spec/generate.py). SPDX-License-Identifier: CC-BY-4.0",
   "title": "AAG Action",
-  "description": "A single Agent Action Grammar action (AAG 0.5.0).",
+  "description": "A single Agent Action Grammar action (AAG 0.6.0).",
   "type": "object",
   "required": [
     "agent_id",
     "task_id",
     "timestamp",
     "step_name",
-    "type"
+    "kind"
   ],
   "additionalProperties": false,
   "properties": {
@@ -43,7 +43,7 @@
       "type": "string",
       "description": "Human-readable label for the action."
     },
-    "type": {
+    "kind": {
       "type": "string",
       "enum": [
         "task.start",
@@ -59,7 +59,7 @@
         "step.gate",
         "step.unknown"
       ],
-      "description": "The action type; one of `action_types`."
+      "description": "The action kind; one of `action_kinds`."
     },
     "verb": {
       "type": "string",
@@ -90,12 +90,12 @@
     {
       "if": {
         "properties": {
-          "type": {
+          "kind": {
             "const": "task.start"
           }
         },
         "required": [
-          "type"
+          "kind"
         ]
       },
       "then": {
@@ -107,12 +107,12 @@
     {
       "if": {
         "properties": {
-          "type": {
+          "kind": {
             "const": "task.end"
           }
         },
         "required": [
-          "type"
+          "kind"
         ]
       },
       "then": {
@@ -124,12 +124,12 @@
     {
       "if": {
         "properties": {
-          "type": {
+          "kind": {
             "const": "task.error"
           }
         },
         "required": [
-          "type"
+          "kind"
         ]
       },
       "then": {
@@ -141,12 +141,12 @@
     {
       "if": {
         "properties": {
-          "type": {
+          "kind": {
             "const": "task.idle"
           }
         },
         "required": [
-          "type"
+          "kind"
         ]
       },
       "then": {
@@ -158,12 +158,12 @@
     {
       "if": {
         "properties": {
-          "type": {
+          "kind": {
             "const": "step.resource"
           }
         },
         "required": [
-          "type"
+          "kind"
         ]
       },
       "then": {
@@ -185,12 +185,12 @@
     {
       "if": {
         "properties": {
-          "type": {
+          "kind": {
             "const": "step.message"
           }
         },
         "required": [
-          "type"
+          "kind"
         ]
       },
       "then": {
@@ -210,12 +210,12 @@
     {
       "if": {
         "properties": {
-          "type": {
+          "kind": {
             "const": "step.self"
           }
         },
         "required": [
-          "type"
+          "kind"
         ]
       },
       "then": {
@@ -237,12 +237,12 @@
     {
       "if": {
         "properties": {
-          "type": {
+          "kind": {
             "const": "step.model"
           }
         },
         "required": [
-          "type"
+          "kind"
         ]
       },
       "then": {
@@ -254,12 +254,12 @@
     {
       "if": {
         "properties": {
-          "type": {
+          "kind": {
             "const": "step.credential"
           }
         },
         "required": [
-          "type"
+          "kind"
         ]
       },
       "then": {
@@ -281,12 +281,12 @@
     {
       "if": {
         "properties": {
-          "type": {
+          "kind": {
             "const": "step.exec"
           }
         },
         "required": [
-          "type"
+          "kind"
         ]
       },
       "then": {
@@ -298,12 +298,12 @@
     {
       "if": {
         "properties": {
-          "type": {
+          "kind": {
             "const": "step.gate"
           }
         },
         "required": [
-          "type"
+          "kind"
         ]
       },
       "then": {
@@ -315,12 +315,12 @@
     {
       "if": {
         "properties": {
-          "type": {
+          "kind": {
             "const": "step.unknown"
           }
         },
         "required": [
-          "type"
+          "kind"
         ]
       },
       "then": {
@@ -333,7 +333,7 @@
       "if": {
         "not": {
           "properties": {
-            "type": {
+            "kind": {
               "const": "task.start"
             }
           }
