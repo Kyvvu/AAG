@@ -34,13 +34,13 @@ def test_task_example(path: Path) -> None:
     lines = [ln for ln in path.read_text().splitlines() if ln.strip()]
     assert lines, f"{path.name} is empty"
     task_ids = set()
-    types = []
+    kinds = []
     for i, line in enumerate(lines):
         action = json.loads(line)
         errs = [e.message for e in VALIDATOR.iter_errors(action)]
         assert not errs, f"{path.name} line {i} invalid: {errs}"
         task_ids.add(action["task_id"])
-        types.append(action["type"])
+        kinds.append(action["kind"])
     assert len(task_ids) == 1, f"{path.name} mixes task_ids: {task_ids}"
-    assert types[0] == "task.start"
-    assert types[-1] == "task.end"
+    assert kinds[0] == "task.start"
+    assert kinds[-1] == "task.end"

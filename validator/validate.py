@@ -81,10 +81,10 @@ def validate_task(actions: list[Any]) -> tuple[list[str], list[str]]:
     if len(task_ids) > 1:
         errors.append(f"a task must share one task_id; found {sorted(str(t) for t in task_ids)}")
 
-    types = [a.get("type") for a in actions if isinstance(a, dict)]
-    if types and types[0] != "task.start":
-        warnings.append(f"task does not begin with task.start (first is {types[0]!r})")
-    if "task.end" in types and types[-1] != "task.end":
+    kinds = [a.get("kind") for a in actions if isinstance(a, dict)]
+    if kinds and kinds[0] != "task.start":
+        warnings.append(f"task does not begin with task.start (first is {kinds[0]!r})")
+    if "task.end" in kinds and kinds[-1] != "task.end":
         warnings.append("a task.end is present but is not the last action")
 
     seqs = [a["seq"] for a in actions if isinstance(a, dict) and "seq" in a]

@@ -1,7 +1,7 @@
 # RFCs
 
 Substantive changes to the AAG — anything touching the closed core (the action
-types, the verbs, the `(type, verb)` legality), the action fields, or the meaning
+kinds, the verbs, the `(kind, verb)` legality), the action fields, or the meaning
 of an existing term — go through a request for comments. The specification stays
 focused on what *is* decided; the open questions and the reasoning behind them
 live here.

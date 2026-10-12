@@ -33,36 +33,36 @@ def test_emitted_schema_is_valid_json_schema() -> None:
 
 def test_consistency_catches_undeclared_granularity_prefix() -> None:
     spec = copy.deepcopy(generate.load())
-    spec["action_types"]["plan.sketch"] = spec["action_types"].pop("task.idle")
+    spec["action_kinds"]["plan.sketch"] = spec["action_kinds"].pop("task.idle")
     assert any("not a declared granularity" in e for e in generate.check_consistency(spec))
 
 
-def test_consistency_catches_granularity_restated_on_action_type() -> None:
-    # `granularity` is derived from the type prefix; carrying it on an action
-    # type would let the two disagree, so the checker must reject it.
+def test_consistency_catches_granularity_restated_on_action_kind() -> None:
+    # `granularity` is derived from the kind prefix; carrying it on an action
+    # kind would let the two disagree, so the checker must reject it.
     spec = copy.deepcopy(generate.load())
-    spec["action_types"]["task.start"]["granularity"] = "step"
-    assert any("derived from the type prefix" in e for e in generate.check_consistency(spec))
+    spec["action_kinds"]["task.start"]["granularity"] = "step"
+    assert any("derived from the kind prefix" in e for e in generate.check_consistency(spec))
 
 
 def test_consistency_rejects_legacy_scope_field() -> None:
-    # AAG <=0.5.0 drafts carried `scope: task|step` per action type. It is gone;
+    # AAG <=0.5.0 drafts carried `scope: task|step` per action kind. It is gone;
     # a source still carrying it must fail loudly rather than be ignored.
     spec = copy.deepcopy(generate.load())
-    spec["action_types"]["task.start"]["scope"] = "task"
-    assert any("derived from the type prefix" in e for e in generate.check_consistency(spec))
+    spec["action_kinds"]["task.start"]["scope"] = "task"
+    assert any("derived from the kind prefix" in e for e in generate.check_consistency(spec))
 
 
 def test_consistency_catches_bad_verb() -> None:
     spec = copy.deepcopy(generate.load())
-    spec["action_types"]["step.resource"]["verbs"] = ["FETCH"]
+    spec["action_kinds"]["step.resource"]["verbs"] = ["FETCH"]
     assert any("unknown verb" in e for e in generate.check_consistency(spec))
 
 
-def test_consistency_catches_wrong_type_count() -> None:
+def test_consistency_catches_wrong_kind_count() -> None:
     spec = copy.deepcopy(generate.load())
-    del spec["action_types"]["task.idle"]
-    assert any("12 action types" in e for e in generate.check_consistency(spec))
+    del spec["action_kinds"]["task.idle"]
+    assert any("12 action kinds" in e for e in generate.check_consistency(spec))
 
 
 def test_consistency_catches_bare_leaf_without_scoped_to() -> None:

@@ -6,11 +6,35 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.0] — draft
+
 ### Changed
 
+- **Breaking: the action field `type` is renamed `kind`**, and the vocabulary key
+  `action_types` in [`spec/vocabulary.yaml`](spec/vocabulary.yaml) (and the
+  generated `vocabulary.json`) is renamed `action_kinds`. `type` collides with the
+  JSON Schema keyword and the Python builtin, and most payloads a harness maps
+  from carry a `type` of their own; `kind` also reads correctly for the `task.*`
+  lifecycle markers, which are not steps. This is a hard cut with no alias: `kind`
+  is required, and an action that carries `type` is rejected by the schema, whose
+  top-level field set is closed
+  ([`examples/actions/invalid_type_field.json`](examples/actions/invalid_type_field.json)).
+  The prose follows: action kinds, `(kind, verb)`, kind-scoped leaves. The OTLP
+  mapping emits the field as the span name plus `aag.kind`. The bare property leaf
+  `kind` on `step.gate` and `counterpart.kind` are unchanged.
+  ([#12](https://github.com/Kyvvu/AAG/issues/12),
+  [Kyvvu/platform#602](https://github.com/Kyvvu/platform/issues/602))
+- **The OTLP mapping keeps the `properties` prefix.** A grouped property
+  `properties.<group>.<leaf>` maps to `aag.properties.<group>.<leaf>` and a bare
+  leaf to `aag.properties.<leaf>`, instead of `aag.<group>.<leaf>` and
+  `aag.<leaf>`. Properties are open, so the old mapping let a property overwrite
+  the attributes for the action's own fields (`aag.verb`, `aag.kind`, …) or the
+  suggested `aag.policy.*` results; those are now reserved
+  ([`docs/otlp-mapping.md`](docs/otlp-mapping.md),
+  [#11](https://github.com/Kyvvu/AAG/issues/11)).
 - **Granularity replaces "scope" and is now explicitly derived.** The task-vs-step
   distinction is named **granularity** (values `task` / `step`, unchanged) and is
-  documented as a projection of the action-type namespace — read off the `type`
+  documented as a projection of the action-kind namespace — read off the `kind`
   prefix — rather than an axis of the vocabulary in its own right.
 
 ### Removed
@@ -18,9 +42,9 @@ follows [Semantic Versioning](https://semver.org/).
 - **The top-level `scopes: [task, step]` enumeration** in
   [`spec/vocabulary.yaml`](spec/vocabulary.yaml), replaced by a `granularity`
   block that states the derivation rule alongside the two values.
-- **The per-action-type `scope: task` / `scope: step` field.** It restated the
-  type prefix and could only ever agree with it, so it was removed rather than
-  renamed; the generator now rejects a source that carries it. The `(type, verb)`
+- **The per-action-kind `scope: task` / `scope: step` field.** It restated the
+  kind prefix and could only ever agree with it, so it was removed rather than
+  renamed; the generator now rejects a source that carries it. The `(kind, verb)`
   legality table is unchanged — granularity never separated a pair, which is the
   evidence it carried no information of its own. No emitted action ever carried
   the field, so the wire format is unaffected.
@@ -64,7 +88,8 @@ The first drafted version of the AAG, open for comment via
   an [OTLP mapping](docs/otlp-mapping.md) and an [adoption guide](docs/adoption.md).
 
 <!-- Comparison/tag links are added once the first version is tagged:
-[Unreleased]: https://github.com/Kyvvu/aag/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/Kyvvu/aag/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/Kyvvu/aag/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/Kyvvu/aag/releases/tag/v0.5.0
 -->
 

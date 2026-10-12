@@ -39,8 +39,8 @@ That line certifies the DCO. No CLA is required.
 
 - **Ordinary changes** — fixes, clarifications, examples, docs, and new
   *suggested* properties — go through a normal pull request.
-- **Substantive changes** — anything touching the closed core (the action types,
-  the verbs, the `(type, verb)` legality), the action fields, or the meaning of
+- **Substantive changes** — anything touching the closed core (the action kinds,
+  the verbs, the `(kind, verb)` legality), the action fields, or the meaning of
   an existing term — go through the [RFC process](rfc/README.md).
 
 ## Making a change

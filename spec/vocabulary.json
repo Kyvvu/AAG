@@ -1,13 +1,13 @@
 {
   "_comment": "GENERATED from vocabulary.yaml — do not edit by hand (run: python spec/generate.py). SPDX-License-Identifier: CC-BY-4.0",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "name": "Agent Action Grammar",
   "license": "CC-BY-4.0",
   "spec": "../docs/model.md",
   "granularity": {
     "derived": true,
-    "derived_from": "type",
-    "rule": "The segment of the action `type` before the first '.'.",
+    "derived_from": "kind",
+    "rule": "The segment of the action `kind` before the first '.'.",
     "values": [
       "task",
       "step"
@@ -27,7 +27,7 @@
       "meaning": "State outside the task's memory is removed (a destructive action)."
     }
   },
-  "action_types": {
+  "action_kinds": {
     "task.start": {
       "verbs": [],
       "meaning": "Opens a task; establishes a fresh memory scope, nothing carried from prior tasks. May carry agent context (see properties)."
@@ -134,15 +134,15 @@
       "required": true,
       "meaning": "Human-readable label for the action."
     },
-    "type": {
+    "kind": {
       "layer": "classification",
       "required": true,
-      "meaning": "The action type; one of `action_types`."
+      "meaning": "The action kind; one of `action_kinds`."
     },
     "verb": {
       "layer": "classification",
       "required": "conditional",
-      "condition": "Required iff the action's type declares a non-empty `verbs` list; absent otherwise.",
+      "condition": "Required iff the action's kind declares a non-empty `verbs` list; absent otherwise.",
       "meaning": "GET / POST / PATCH / DELETE."
     },
     "aag_version": {
@@ -289,7 +289,7 @@
         "path": "provider",
         "bare": true,
         "scoped_to": "step.model",
-        "meaning": "The model provider (for a step.model). Bare — the step.model type scopes it. Maps to OTel `gen_ai.system`.",
+        "meaning": "The model provider (for a step.model). Bare — the step.model kind scopes it. Maps to OTel `gen_ai.system`.",
         "examples": [
           "openai",
           "anthropic"
@@ -299,7 +299,7 @@
         "path": "model",
         "bare": true,
         "scoped_to": "step.model",
-        "meaning": "The model identifier (for a step.model). Bare — the step.model type scopes it. Maps to OTel `gen_ai.request.model`.",
+        "meaning": "The model identifier (for a step.model). Bare — the step.model kind scopes it. Maps to OTel `gen_ai.request.model`.",
         "examples": [
           "gpt-4o",
           "claude-sonnet-4-6"

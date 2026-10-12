@@ -28,9 +28,9 @@ rule will be replaced by whatever the community body adopts.
 Not every part of the AAG changes at the same rate. This matters for governance,
 because it determines what a change costs.
 
-- **The closed core** — the twelve action types, the four verbs, and the
-  `(type, verb)` legality (see [`spec/vocabulary.yaml`](spec/vocabulary.yaml)).
-  This is a compatibility surface. Adding a type or verb is a minor version bump;
+- **The closed core** — the twelve action kinds, the four verbs, and the
+  `(kind, verb)` legality (see [`spec/vocabulary.yaml`](spec/vocabulary.yaml)).
+  This is a compatibility surface. Adding a kind or verb is a minor version bump;
   removing or repurposing one is a major bump. Changes here require an RFC (below).
 - **The action fields** — the closed set in the anatomy
   ([`docs/model.md`](docs/model.md) §2.2). A new field is a considered addition

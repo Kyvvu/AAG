@@ -2,6 +2,8 @@
 
 > **Status:** Draft — open for comment.
 > **Full specification:** [`../docs/model.md`](../docs/model.md) · **Machine-readable:** [`../spec/vocabulary.yaml`](../spec/vocabulary.yaml)
+>
+> **Note (2026-10-12):** AAG 0.6.0 renamed the action's classification field from `type` to `kind`, and the vocabulary key `action_types` to `action_kinds`, with no alias ([Kyvvu/AAG#12](https://github.com/Kyvvu/AAG/issues/12)). This RFC is kept as it was proposed and commented on, so its text still says `type`; read it as `kind`.
 
 ## The problem
 

@@ -18,7 +18,7 @@ must pass, the `invalid_*` ones must fail.
 | [`step_resource_get_intended.json`](actions/step_resource_get_intended.json) | The **intended** form of the same read — no `output`, no `seq` — as a pre-execution hook would emit it. |
 | [`step_credential_get.json`](actions/step_credential_get.json) | A `step.credential` GET (reading a secret from `.env`) — note the secret value stays out of `output`, only `data.classification: secret`. |
 | [`step_self_post.json`](actions/step_self_post.json) | A `step.self` POST — the agent writing to its own memory (state that may outlive the task). |
-| [`step_exec.json`](actions/step_exec.json) | A `step.exec` — code execution; the `command` is a bare, type-scoped leaf. |
+| [`step_exec.json`](actions/step_exec.json) | A `step.exec` — code execution; the `command` is a bare, kind-scoped leaf. |
 | [`task_start.json`](actions/task_start.json) | A `task.start` carrying agent context (`agent.*`) and `aag_version`. |
 | [`task_idle.json`](actions/task_idle.json) · [`task_error.json`](actions/task_error.json) | The `task.idle` and `task.error` lifecycle markers. |
 | [`step_gate.json`](actions/step_gate.json) | A `step.gate`. Its decision (`pass`/`deny`) is the action's **`output`**; `input` is what was checked; `kind` (human/guardrail) is a property. |
@@ -27,9 +27,10 @@ must pass, the `invalid_*` ones must fail.
 
 | file | why it is malformed |
 |------|---------------------|
-| [`invalid_step_model_with_verb.json`](actions/invalid_step_model_with_verb.json) | `step.model` is a verbless type (a model call is both a source and a sink), so carrying a `verb` is not a legal `(type, verb)` combination. |
-| [`invalid_task_start_with_verb.json`](actions/invalid_task_start_with_verb.json) | `task.*` types take no verb; a `task.start` carrying a `verb` is malformed. |
-| [`invalid_unknown_type.json`](actions/invalid_unknown_type.json) | `type` must be one of the twelve; `step.frobnicate` is not in the closed set. |
+| [`invalid_step_model_with_verb.json`](actions/invalid_step_model_with_verb.json) | `step.model` is a verbless kind (a model call is both a source and a sink), so carrying a `verb` is not a legal `(kind, verb)` combination. |
+| [`invalid_task_start_with_verb.json`](actions/invalid_task_start_with_verb.json) | `task.*` kinds take no verb; a `task.start` carrying a `verb` is malformed. |
+| [`invalid_unknown_kind.json`](actions/invalid_unknown_kind.json) | `kind` must be one of the twelve; `step.frobnicate` is not in the closed set. |
+| [`invalid_type_field.json`](actions/invalid_type_field.json) | Uses `type`, the field's name before AAG 0.6.0, instead of `kind`. The rename has no alias: `type` is not an action field (the top-level field set is closed) and `kind` is required. |
 
 ## Tasks — `tasks/`
 

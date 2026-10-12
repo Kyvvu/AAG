@@ -13,14 +13,14 @@
   <a href="https://github.com/Kyvvu/AAG/actions/workflows/ci.yml"><img src="https://github.com/Kyvvu/AAG/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
   <a href="rfc/0001-agent-action-vocabulary.md"><img src="https://img.shields.io/badge/RFC--0001-open%20for%20comment-6366f1" alt="RFC-0001: open for comment"></a>
   <a href="https://github.com/Kyvvu/AAG/discussions"><img src="https://img.shields.io/badge/GitHub-Discussions-6366f1?logo=github&logoColor=white" alt="GitHub Discussions"></a>
-  <img src="https://img.shields.io/badge/version-0.5.0%20draft-8b5cf6" alt="Version 0.5.0 (draft)">
+  <img src="https://img.shields.io/badge/version-0.6.0%20draft-8b5cf6" alt="Version 0.6.0 (draft)">
   <a href="LICENSE"><img src="https://img.shields.io/badge/spec-CC%20BY%204.0-64748b" alt="Spec licensed CC BY 4.0"></a>
   <a href="LICENSE-CODE"><img src="https://img.shields.io/badge/code-Apache%202.0-64748b" alt="Code licensed Apache-2.0"></a>
 </p>
 
 The AAG is a standard way to describe the actions an agent takes while carrying out a task. Every action carries
 
-* a **type** (`task.start`, `step.resource`, `step.message`, …), 
+* a **kind** (`task.start`, `step.resource`, `step.message`, …), 
 * a **verb** where one applies (`GET`/`POST`/`PATCH`/`DELETE`, read as whether data enters or leaves the task — not as an HTTP method), and 
 * a tree of **`properties`** (`data.classification`, `target.host`, …). AAG fixes these so any tool, framework, or platform describes what an agent does in the same terms.
 
@@ -49,7 +49,7 @@ AAG gives those behaviours one name each, so that:
 
 The AAG is a grammar, not a security engine. This means that:
 
-- It defines what an agent action *is* — a closed set of action types and verbs, plus an open, namespaced tree of properties.
+- It defines what an agent action *is* — a closed set of action kinds and verbs, plus an open, namespaced tree of properties.
 - It does **not** define whether an action is *allowed*. No policies, no rules, no data-exfiltration checks, no enforcement. That would be the job of a policy engine, and is out of scope here (though it's exactly the kind of application the AAG is meant to make possible).
 
 Thus, in its bare essence, the AAG is designed to allow building more secure agents. The closed vocabulary provided by the AAG is an alphabet that security policies and rules can be written against — the AAG supplies the words; an engine can do policing, uniformly, across agents. 
@@ -78,9 +78,9 @@ You can find the sources for each of the above here:
 
 The AAG is composed of two main layers:
 
-1. **A closed enum table.** Every agent-action is one `(type, verb)` combination drawn from a fixed, versioned allow-list. These are the nouns and verbs of the language, and they do not change without a version bump.
+1. **A closed enum table.** Every agent-action is one `(kind, verb)` combination drawn from a fixed, versioned allow-list. These are the nouns and verbs of the language, and they do not change without a version bump.
 
-   | type              | verbs                  | meaning (abridged)                          |
+   | kind              | verbs                  | meaning (abridged)                          |
    |-------------------|------------------------|---------------------------------------------|
    | `task.start`      | —                      | a task run begins                           |
    | `step.resource`   | GET/POST/PATCH/DELETE  | read or write a resource                    |
@@ -89,7 +89,7 @@ The AAG is composed of two main layers:
    | `step.credential` | GET/POST/PATCH/DELETE  | read or write a secret/credential           |
    | …                 | …                      | see [`spec/vocabulary.yaml`](spec/vocabulary.yaml) |
 
-2. **An open properties tree.** Beyond type and verb, an action may carry a nested `properties` object. The AAG suggests a number of cross-cutting groups (`target`, `auth`, `data`, `agent`) with defined meanings but leaves the rest open — no property is required, and an emitter may add its own. The enums are closed; the properties tree is open and extensible.
+2. **An open properties tree.** Beyond kind and verb, an action may carry a nested `properties` object. The AAG suggests a number of cross-cutting groups (`target`, `auth`, `data`, `agent`) with defined meanings but leaves the rest open — no property is required, and an emitter may add its own. The enums are closed; the properties tree is open and extensible.
 
 > Note that it is foreseeable that at some point a number of properties will become required.
 
@@ -99,7 +99,7 @@ The canonical source of truth is **[`spec/vocabulary.yaml`](spec/vocabulary.yaml
 
 ```
 spec/         The vocabulary itself in machine and human (assuming you are ok reading `yaml` files) format.
-docs/         The semantics (what each type/verb means), some pointers on how to use the AAG, and a mapping to OTLP.
+docs/         The semantics (what each kind/verb means), some pointers on how to use the AAG, and a mapping to OTLP.
 examples/     A set of complete example tasks, both properly and improperly formatted.
 validator/    A tiny, dependency-light checker: is this a well-formed AAG action? Is this a well-formed task?
 tests/        A simple script to see if every example validates (or fails) as intended.
@@ -113,7 +113,7 @@ rfc/          The request-for-comments driving this standard forward
   "agent_id": "invoice-assistant",
   "task_id": "run-2f1c",
   "timestamp": "2026-07-30T09:14:22Z",
-  "type": "step.resource",
+  "kind": "step.resource",
   "verb": "POST",
   "step_name": "post_invoice",
   "input": { "invoice_id": "INV-2026-0917", "customer_id": "C-4821", "amount": 148.00, "currency": "EUR" },
@@ -141,7 +141,7 @@ The AAG is created for securing an agent while it's going about its job. When do
 
 ## Versioning & stability
 
-AAG is semver-versioned. The enum table is a compatibility surface: adding a type or verb is a minor bump, removing or repurposing one is a major bump. Reserved property groups follow the same discipline; custom groups are yours and should never break. See [`CHANGELOG.md`](CHANGELOG.md) for changes along the way.
+AAG is semver-versioned. The enum table is a compatibility surface: adding a kind or verb is a minor bump, removing or repurposing one is a major bump. Reserved property groups follow the same discipline; custom groups are yours and should never break. See [`CHANGELOG.md`](CHANGELOG.md) for changes along the way.
 
 ## Governance
 

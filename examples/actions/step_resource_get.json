@@ -5,7 +5,7 @@
   "seq": 5,
   "timestamp": "2026-07-30T09:14:22Z",
   "step_name": "get_customer_record",
-  "type": "step.resource",
+  "kind": "step.resource",
   "verb": "GET",
   "input": { "customer_id": "C-4821" },
   "output": { "status": "ok", "record": { "name": "Jordan Vij", "email": "j.vij@example.com" } },

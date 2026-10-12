@@ -6,29 +6,29 @@
 # differ, this file takes priority.
 #
 # What is CLOSED vs OPEN:
-#   - The `verbs` and `action_types` enums below are CLOSED. Any (type, verb)
-#     pair not derivable from `action_types` is malformed.
+#   - The `verbs` and `action_kinds` enums below are CLOSED. Any (kind, verb)
+#     pair not derivable from `action_kinds` is malformed.
 #   - `properties` are OPEN: no property is required and an emitter may add any
 #     group or leaf. The leaves listed here are *suggested*, so that the
 #     security-relevant facts are named the same way everywhere. Any `values`
 #     listed for a property are suggested, not enforced.
 
-version: "0.5.0"
+version: "0.6.0"
 name: "Agent Action Grammar"
 license: "CC-BY-4.0"
 spec: "../docs/model.md"
 
 # --- Granularity (derived) ---------------------------------------------------
 # `granularity` is NOT an independent axis of the vocabulary. It is a projection
-# of the action-type namespace: read it off the segment before the first '.' of
-# the action `type` (`task.*` -> task, `step.*` -> step). It is therefore never
+# of the action-kind namespace: read it off the segment before the first '.' of
+# the action `kind` (`task.*` -> task, `step.*` -> step). It is therefore never
 # carried as a field on an emitted action, and it is not restated on each entry
-# in `action_types` below — that would duplicate the prefix and allow the two to
+# in `action_kinds` below — that would duplicate the prefix and allow the two to
 # disagree. Consumers that want to group actions by granularity derive it.
 granularity:
   derived: true
-  derived_from: type
-  rule: "The segment of the action `type` before the first '.'."
+  derived_from: kind
+  rule: "The segment of the action `kind` before the first '.'."
   values: [task, step]
 
 # --- Verbs -------------------------------------------------------------------
@@ -44,10 +44,10 @@ verbs:
   DELETE:
     meaning: "State outside the task's memory is removed (a destructive action)."
 
-# --- Action types ------------------------------------------------------------
-# The twelve types. `verbs: []` means the type takes no verb. The set of valid
-# (type, verb) pairs is exactly each type crossed with its listed verbs.
-action_types:
+# --- Action kinds ------------------------------------------------------------
+# The twelve kinds. `verbs: []` means the kind takes no verb. The set of valid
+# (kind, verb) pairs is exactly each kind crossed with its listed verbs.
+action_kinds:
 
   # Task lifecycle (granularity `task`, derived from the prefix; no verb)
   task.start:
@@ -122,14 +122,14 @@ fields:
     layer: positioning
     required: true
     meaning: "Human-readable label for the action."
-  type:
+  kind:
     layer: classification
     required: true
-    meaning: "The action type; one of `action_types`."
+    meaning: "The action kind; one of `action_kinds`."
   verb:
     layer: classification
     required: conditional
-    condition: "Required iff the action's type declares a non-empty `verbs` list; absent otherwise."
+    condition: "Required iff the action's kind declares a non-empty `verbs` list; absent otherwise."
     meaning: "GET / POST / PATCH / DELETE."
   aag_version:
     layer: classification
@@ -153,7 +153,7 @@ fields:
 # No property is required and the set is OPEN. The AAG only *suggests* the
 # namespaces and leaves below so that recurring, security-relevant facts are
 # named consistently. A group is named only when it carries information the
-# action type does not already imply.
+# action kind does not already imply.
 properties:
   required: false
   open: true
@@ -169,7 +169,7 @@ properties:
     raw: "Freeform: the emitter's untranslated native record. No defined leaves."
 
   # Suggested leaves. A dotted `path` sits under the group named by its prefix.
-  # `bare: true` with `scoped_to` is a leaf scoped by an action type, carried
+  # `bare: true` with `scoped_to` is a leaf scoped by an action kind, carried
   # without a redundant group prefix.
   suggested_leaves:
     - path: target.host
@@ -213,12 +213,12 @@ properties:
     - path: provider
       bare: true
       scoped_to: step.model
-      meaning: "The model provider (for a step.model). Bare — the step.model type scopes it. Maps to OTel `gen_ai.system`."
+      meaning: "The model provider (for a step.model). Bare — the step.model kind scopes it. Maps to OTel `gen_ai.system`."
       examples: [openai, anthropic]
     - path: model
       bare: true
       scoped_to: step.model
-      meaning: "The model identifier (for a step.model). Bare — the step.model type scopes it. Maps to OTel `gen_ai.request.model`."
+      meaning: "The model identifier (for a step.model). Bare — the step.model kind scopes it. Maps to OTel `gen_ai.request.model`."
       examples: ["gpt-4o", "claude-sonnet-4-6"]
     - path: kind
       bare: true

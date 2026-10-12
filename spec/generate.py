@@ -61,18 +61,18 @@ def check_consistency(spec: dict[str, Any]) -> list[str]:
     if verbs != VALID_VERBS:
         errors.append(f"`verbs` must be exactly {sorted(VALID_VERBS)}, got {sorted(verbs)}")
 
-    # `granularity` is a derived projection of the type namespace, not a field on
-    # an action: the declared values must be exactly the set of type prefixes.
+    # `granularity` is a derived projection of the kind namespace, not a field on
+    # an action: the declared values must be exactly the set of kind prefixes.
     granularities = set(spec.get("granularity", {}).get("values", []))
 
-    action_types = spec.get("action_types", {})
-    # Tripwire: the count is deliberately hard-coded — adding or removing a type
+    action_kinds = spec.get("action_kinds", {})
+    # Tripwire: the count is deliberately hard-coded — adding or removing a kind
     # is a conscious, versioned change, so it should force an edit here too.
-    if len(action_types) != 12:
-        errors.append(f"expected 12 action types, found {len(action_types)}")
-    for t, d in action_types.items():
+    if len(action_kinds) != 12:
+        errors.append(f"expected 12 action kinds, found {len(action_kinds)}")
+    for t, d in action_kinds.items():
         if "." not in t:
-            errors.append(f"{t}: type must contain a '.' granularity prefix")
+            errors.append(f"{t}: kind must contain a '.' granularity prefix")
             continue
         prefix = t.split(".", 1)[0]
         if prefix not in granularities:
@@ -82,8 +82,8 @@ def check_consistency(spec: dict[str, Any]) -> list[str]:
             )
         if "scope" in d or "granularity" in d:
             errors.append(
-                f"{t}: granularity is derived from the type prefix and must not "
-                f"be restated on the action type"
+                f"{t}: granularity is derived from the kind prefix and must not "
+                f"be restated on the action kind"
             )
         for v in d.get("verbs", []):
             if v not in VALID_VERBS:
@@ -148,12 +148,12 @@ def render_vocabulary(spec: dict[str, Any]) -> str:
 def build_action_schema(spec: dict[str, Any]) -> dict[str, Any]:
     """Derive a JSON Schema for a single action from the vocabulary.
 
-    Encodes the closed grammar: the type enum, the per-type verb legality
-    (verb required and constrained where a type declares verbs; forbidden
+    Encodes the closed grammar: the kind enum, the per-kind verb legality
+    (verb required and constrained where a kind declares verbs; forbidden
     otherwise), the always-required fields, the task.start-only fields, a
     closed top-level field set, and an open `properties` object.
     """
-    types = list(spec["action_types"])
+    kinds = list(spec["action_kinds"])
     verbs = list(spec["verbs"])
     fields = spec["fields"]
 
@@ -168,7 +168,7 @@ def build_action_schema(spec: dict[str, Any]) -> dict[str, Any]:
         "seq": {"type": "integer", "minimum": 0},
         "timestamp": {"type": "string", "format": "date-time"},
         "step_name": {"type": "string"},
-        "type": {"type": "string", "enum": types},
+        "kind": {"type": "string", "enum": kinds},
         "verb": {"type": "string", "enum": verbs},
         "aag_version": {"type": "string"},
         "properties": {"type": "object"},
@@ -187,11 +187,11 @@ def build_action_schema(spec: dict[str, Any]) -> dict[str, Any]:
     required = [f for f, d in fields.items() if d.get("required") is True]
 
     all_of: list[dict[str, Any]] = []
-    # Per-type verb legality.
-    for t, d in spec["action_types"].items():
-        # `required: [type]` so the conditional only fires when `type` is present;
-        # an action missing `type` then fails once (on `type`) without noise.
-        cond: dict[str, Any] = {"if": {"properties": {"type": {"const": t}}, "required": ["type"]}}
+    # Per-kind verb legality.
+    for t, d in spec["action_kinds"].items():
+        # `required: [kind]` so the conditional only fires when `kind` is present;
+        # an action missing `kind` then fails once (on `kind`) without noise.
+        cond: dict[str, Any] = {"if": {"properties": {"kind": {"const": t}}, "required": ["kind"]}}
         if d.get("verbs"):
             cond["then"] = {"required": ["verb"], "properties": {"verb": {"enum": d["verbs"]}}}
         else:
@@ -202,7 +202,7 @@ def build_action_schema(spec: dict[str, Any]) -> dict[str, Any]:
     task_only = [f for f, d in fields.items() if d.get("only_on") == ["task.start"]]
     if task_only:
         all_of.append({
-            "if": {"not": {"properties": {"type": {"const": "task.start"}}}},
+            "if": {"not": {"properties": {"kind": {"const": "task.start"}}}},
             "then": {"properties": {f: False for f in task_only}},
         })
 
@@ -260,7 +260,7 @@ def main(argv: list[str]) -> int:
     for path, out in outputs.items():
         path.write_text(out)
     print(f"Wrote {JSON_PATH.name} and {SCHEMA_PATH.name} — "
-          f"{len(spec['action_types'])} action types, "
+          f"{len(spec['action_kinds'])} action kinds, "
           f"{len(spec['properties']['suggested_leaves'])} suggested leaves.")
     return 0
 
