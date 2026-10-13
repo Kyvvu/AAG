@@ -310,7 +310,7 @@ We bring four proposals to ACS based on this mapping. We describe them here gene
 3. **`resource`, and a place for properties.** A `resource` field on tool calls, and an open object for further properties a harness can supply. This proposal also describes what proposals 1 to 3 together mean for `capability` ([section 3.1](#31-acs-classifies-a-step-in-two-places)). Related: [#8], which proposes trust and sensitivity metadata on tools and is deferred to ACS v0.2.0.
 4. **Approvals as recorded steps.** A hook the harness emits when it has run an approval or a check itself, and an entry in the Guardian's record for every resolved `ask` ([section 5.3](#53-approval-a-decision-in-acs-a-step-in-aag)). Related: [#175] and Discussion [#115].
 
-While reading ACS we also noticed that the three skill hooks are missing from its OpenTelemetry and OCSF mapping. ACS already tracks this ([#57], [#58]), so we do not raise it.
+While reading ACS we also noticed that the three skill hooks were missing from its OpenTelemetry and OCSF mapping. ACS tracked this ([#57], [#58]) and has since fixed it.
 
 ## 7. What AAG can take from ACS
 
