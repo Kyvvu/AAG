@@ -158,8 +158,9 @@ def build_action_schema(spec: dict[str, Any]) -> dict[str, Any]:
     fields = spec["fields"]
 
     # Field -> JSON Schema fragment. `properties` is the open extension point;
-    # `input`/`output` are intentionally untyped (any JSON value — granularity
-    # is open, see model.md §2.5 and the RFC).
+    # `input`/`output` are JSON objects (0.7.0; their granularity stays open,
+    # see model.md §2.5 and the RFC). `meta` is an open, implementation-defined
+    # object that does not change the action's meaning.
     field_schema: dict[str, dict[str, Any]] = {
         "agent_id": {"type": "string"},
         "task_id": {"type": "string"},
@@ -172,8 +173,9 @@ def build_action_schema(spec: dict[str, Any]) -> dict[str, Any]:
         "verb": {"type": "string", "enum": verbs},
         "aag_version": {"type": "string"},
         "properties": {"type": "object"},
-        "input": {},
-        "output": {},
+        "input": {"type": "object"},
+        "output": {"type": "object"},
+        "meta": {"type": "object"},
     }
     # Attach each field's meaning from the yaml as its description.
     properties: dict[str, Any] = {}
@@ -205,6 +207,15 @@ def build_action_schema(spec: dict[str, Any]) -> dict[str, Any]:
             "if": {"not": {"properties": {"kind": {"const": "task.start"}}}},
             "then": {"properties": {f: False for f in task_only}},
         })
+
+    # A completed gate (one that carries `output`) records its decision.
+    all_of.append({
+        "if": {"properties": {"kind": {"const": "step.gate"}}, "required": ["kind", "output"]},
+        "then": {"properties": {"output": {
+            "required": ["decision"],
+            "properties": {"decision": {"enum": ["pass", "deny"]}},
+        }}},
+    })
 
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",

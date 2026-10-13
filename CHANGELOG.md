@@ -6,6 +6,30 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.0] — draft
+
+### Changed
+
+- **Breaking: `input` and `output` are JSON objects.** They were untyped (any JSON
+  value). A native value that is not an object is wrapped under a named key,
+  conventionally `result`. A path such as `input.recipient` now always has a
+  defined meaning ([#17](https://github.com/Kyvvu/AAG/issues/17),
+  [Kyvvu/platform#594](https://github.com/Kyvvu/platform/issues/594)).
+- **Breaking: a completed `step.gate` carries `output.decision`** (`pass` or
+  `deny`). The vocabulary already said the decision was the gate's output; the
+  schema now defines its shape. An intended gate (no `output`) has made no
+  decision ([#16](https://github.com/Kyvvu/AAG/issues/16),
+  [Kyvvu/platform#603](https://github.com/Kyvvu/platform/issues/603)).
+
+### Added
+
+- **An optional `meta` object**: implementation-defined data about an action, such
+  as an evaluator's verdict. It must not change the action's meaning; consumers
+  accept it, may ignore it and ignore keys they do not understand; keys should be
+  namespaced by their writer. The OTLP mapping does not map it by default
+  ([#15](https://github.com/Kyvvu/AAG/issues/15),
+  [Kyvvu/platform#596](https://github.com/Kyvvu/platform/issues/596)).
+
 ## [0.6.0] — draft
 
 ### Changed

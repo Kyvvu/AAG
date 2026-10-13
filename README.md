@@ -13,7 +13,7 @@
   <a href="https://github.com/Kyvvu/AAG/actions/workflows/ci.yml"><img src="https://github.com/Kyvvu/AAG/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
   <a href="rfc/0001-agent-action-vocabulary.md"><img src="https://img.shields.io/badge/RFC--0001-open%20for%20comment-6366f1" alt="RFC-0001: open for comment"></a>
   <a href="https://github.com/Kyvvu/AAG/discussions"><img src="https://img.shields.io/badge/GitHub-Discussions-6366f1?logo=github&logoColor=white" alt="GitHub Discussions"></a>
-  <img src="https://img.shields.io/badge/version-0.6.0%20draft-8b5cf6" alt="Version 0.6.0 (draft)">
+  <img src="https://img.shields.io/badge/version-0.7.0%20draft-8b5cf6" alt="Version 0.7.0 (draft)">
   <a href="LICENSE"><img src="https://img.shields.io/badge/spec-CC%20BY%204.0-64748b" alt="Spec licensed CC BY 4.0"></a>
   <a href="LICENSE-CODE"><img src="https://img.shields.io/badge/code-Apache%202.0-64748b" alt="Code licensed Apache-2.0"></a>
 </p>
