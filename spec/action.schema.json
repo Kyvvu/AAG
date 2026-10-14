@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$comment": "GENERATED from vocabulary.yaml — do not edit by hand (run: python spec/generate.py). SPDX-License-Identifier: CC-BY-4.0",
   "title": "AAG Action",
-  "description": "A single Agent Action Grammar action (AAG 0.6.0).",
+  "description": "A single Agent Action Grammar action (AAG 0.7.0).",
   "type": "object",
   "required": [
     "agent_id",
@@ -80,10 +80,16 @@
       "description": "Nested contextual object (see `properties`). Open and extensible."
     },
     "input": {
-      "description": "The arguments to the action."
+      "type": "object",
+      "description": "The arguments to the action, as a JSON object. A native value that is not an object is wrapped under a named key (conventionally `result` for a single value)."
     },
     "output": {
-      "description": "The result of the action. For a step, an absent `output` marks an INTENDED action (pre-execution); a present one marks a COMPLETED action."
+      "type": "object",
+      "description": "The result of the action, as a JSON object. For a step, an absent `output` marks an INTENDED action (pre-execution); a present one marks a COMPLETED action. A completed `step.gate` carries its decision as `output.decision` (`pass` or `deny`)."
+    },
+    "meta": {
+      "type": "object",
+      "description": "Implementation-defined data about the action (e.g. an evaluator's verdict). It must not change the meaning of the action; consumers accept it and may ignore it, and ignore keys they do not understand. Keys should be namespaced by their writer (e.g. `kyvvu.eval`)."
     }
   },
   "allOf": [
@@ -343,6 +349,36 @@
         "properties": {
           "parent_task_id": false,
           "aag_version": false
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "step.gate"
+          }
+        },
+        "required": [
+          "kind",
+          "output"
+        ]
+      },
+      "then": {
+        "properties": {
+          "output": {
+            "required": [
+              "decision"
+            ],
+            "properties": {
+              "decision": {
+                "enum": [
+                  "pass",
+                  "deny"
+                ]
+              }
+            }
+          }
         }
       }
     }

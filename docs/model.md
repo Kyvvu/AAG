@@ -53,7 +53,7 @@ The AAG consists of twelve action kinds: four `task.*` lifecycle kinds and eight
 | `step.model`      | —                        | A model invocation. Both sends context to the model and receives a completion, so no single verb applies. Data is both exfiltrated and infiltrated. |
 | `step.credential` | GET, POST, PATCH, DELETE                      | A read or write of sensitive material (a secret or credential): GET retrieves a secret; the write verbs create, modify, or remove one. A read or write of a `.env` file would be a prime example.                                     |
 | `step.exec`       | —                        | Code execution. May be internally or externally scoped through the properties, but warrants its own kind.                                                  |
-| `step.gate`       | —                        | A gate — a guardrail (a check of contents / data that serves as input or output of preceding or following steps) or human approval. Its **decision (pass/deny) is the action's `output`**; `input` is what was checked. A distinct kind since agent-paths often require a gate to precede a sensitive step (e.g. human approval before an outbound POST). |
+| `step.gate`       | —                        | A gate — a guardrail (a check of contents / data that serves as input or output of preceding or following steps) or human approval. Its **decision is the action's `output.decision`** (`pass` or `deny`); `input` is what was checked. A distinct kind since agent-paths often require a gate to precede a sensitive step (e.g. human approval before an outbound POST). |
 | `step.unknown`    | —                        | Catch-all: the agent did something that could not be classified. Usually a thing to prevent, but useful to capture improper harnesses whose event emission is incomplete.            |
 
 #### One tool call, one action
@@ -64,11 +64,12 @@ Some harnesses reach many tools through a single connection — an MCP server, f
 
 As stated, an agent carries out a task (`task.start`), runs through multiple actions (i.e., `step.message` to get user input, `step.model` to generate a response, etc.) until task completion (`task.end`).
 
-Every *individual* action a harness emits has three conceptual layers:
+Every *individual* action a harness emits has three conceptual layers, plus an optional annotation:
 
 - **Positioning** — where the action sits in the stream, so records from different harnesses can be grouped and ordered: `agent_id`, `task_id`, `seq`, `timestamp`, and the human-readable label `step_name`.
 - **Classification** — *what kind* of action it is: its `kind` (§2.1), and — for `step.x` kinds that take one — a `verb` (§2.3).
 - **Content** — the aforementioned triplet {metadata, arguments, result} = {`properties`, `input`, `output`}. For a `step.x`, an absent `output` is interpreted to signal an **intended** action (pre-execution). When `output` is present the action is deemed **completed**. 
+- **Annotation** — the optional `meta` object: implementation-defined data *about* the action (an evaluator's verdict, provenance). It is not part of what the action is, never changes its meaning, and a consumer may ignore it.
 
 The following fields are explicitly part of the AAG:
 
@@ -85,8 +86,9 @@ The following fields are explicitly part of the AAG:
 | classification | `verb`              | ⚠️※     | `GET` / `POST` / `PATCH` / `DELETE`. See §2.3. ※ Required only for step kinds that take a verb; absent for all others. |
 | classification | `aag_version`       | ❌       | On `task.start` only: the AAG version the stream conforms to. (Out-of-band version negotiation is discussed in the [RFC](../rfc/0001-agent-action-vocabulary.md).) |
 | content        | `properties`        | ❌       | Nested contextual object — the metadata that gives the action its security meaning (§2.4).  |
-| content        | `input`             | ❌       | The arguments to the action.                                                              |
-| content        | `output`            | ❌       | The result of the action. Absent ⇒ *intended* (steps only).                                |
+| content        | `input`             | ❌       | The arguments to the action, as a JSON object (a non-object value is wrapped under a named key, conventionally `result`). |
+| content        | `output`            | ❌       | The result of the action, as a JSON object. Absent ⇒ *intended* (steps only). A completed `step.gate` carries `output.decision`: `pass` or `deny`. |
+| annotation     | `meta`              | ❌       | Implementation-defined data about the action, e.g. an evaluator's verdict. It must not change the action's meaning; consumers accept it, may ignore it, and ignore keys they do not understand. Keys should be namespaced by their writer (`kyvvu.eval`). Absent when there is none. |
 
 Please note that **task and step actions are not symmetric.** 
 

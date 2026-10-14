@@ -1,0 +1,19 @@
+{
+  "agent_id": "support-assistant",
+  "task_id": "run-9f2ac1",
+  "seq": 3,
+  "timestamp": "2026-07-30T09:14:21Z",
+  "step_name": "lookup_order",
+  "kind": "step.resource",
+  "verb": "GET",
+  "input": {
+    "order_id": "4411"
+  },
+  "output": "Order 4411 shipped",
+  "properties": {
+    "target": {
+      "host": "orders.internal",
+      "trust": "internal"
+    }
+  }
+}

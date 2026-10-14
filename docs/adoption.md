@@ -29,7 +29,7 @@ agent in the `agent` group:
 
 ```json
 { "agent_id": "…", "task_id": "run-…", "timestamp": "…", "step_name": "…",
-  "kind": "task.start", "aag_version": "0.6.0",
+  "kind": "task.start", "aag_version": "0.7.0",
   "properties": { "agent": { "risk_classification": "…", "purpose": "…", "environment": "…" } } }
 ```
 

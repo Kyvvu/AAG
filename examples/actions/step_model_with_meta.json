@@ -1,0 +1,23 @@
+{
+  "agent_id": "support-assistant",
+  "task_id": "run-9f2ac1",
+  "seq": 4,
+  "timestamp": "2026-07-30T09:14:23Z",
+  "step_name": "draft_reply",
+  "kind": "step.model",
+  "input": {
+    "prompt": "Draft a reply"
+  },
+  "output": {
+    "result": "Thanks for reaching out"
+  },
+  "properties": {
+    "provider": "openai",
+    "model": "gpt-4o"
+  },
+  "meta": {
+    "kyvvu.eval": {
+      "action": "allow"
+    }
+  }
+}

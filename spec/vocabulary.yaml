@@ -13,7 +13,7 @@
 #     security-relevant facts are named the same way everywhere. Any `values`
 #     listed for a property are suggested, not enforced.
 
-version: "0.6.0"
+version: "0.7.0"
 name: "Agent Action Grammar"
 license: "CC-BY-4.0"
 spec: "../docs/model.md"
@@ -143,11 +143,15 @@ fields:
   input:
     layer: content
     required: false
-    meaning: "The arguments to the action."
+    meaning: "The arguments to the action, as a JSON object. A native value that is not an object is wrapped under a named key (conventionally `result` for a single value)."
   output:
     layer: content
     required: false
-    meaning: "The result of the action. For a step, an absent `output` marks an INTENDED action (pre-execution); a present one marks a COMPLETED action."
+    meaning: "The result of the action, as a JSON object. For a step, an absent `output` marks an INTENDED action (pre-execution); a present one marks a COMPLETED action. A completed `step.gate` carries its decision as `output.decision` (`pass` or `deny`)."
+  meta:
+    layer: annotation
+    required: false
+    meaning: "Implementation-defined data about the action (e.g. an evaluator's verdict). It must not change the meaning of the action; consumers accept it and may ignore it, and ignore keys they do not understand. Keys should be namespaced by their writer (e.g. `kyvvu.eval`)."
 
 # --- Properties --------------------------------------------------------------
 # No property is required and the set is OPEN. The AAG only *suggests* the

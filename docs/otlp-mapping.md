@@ -35,6 +35,7 @@ A **task** becomes a **trace**; each **action** becomes a **span** under a singl
 | `properties.<group>.<leaf>` | `aag.properties.<group>.<leaf>` (flattened) | e.g. `aag.properties.target.trust`, `aag.properties.data.classification` |
 | a bare leaf (`command`, `kind`) | `aag.properties.<leaf>` | e.g. `aag.properties.command` |
 | `input` / `output` | `aag.input` / `aag.output`, or a span **event** | optional; may be summarized or omitted (privacy — see the RFC) |
+| `meta` | not mapped by default | implementation-defined; an implementation may export its own namespaced keys under its own attribute prefix (never under `aag.`) |
 
 Properties are open, so every property-derived attribute sits under `aag.properties.`. The attributes for the action's own fields (`aag.kind`, `aag.verb`, `aag.seq`, `aag.step_name`, `aag.agent_id`, `aag.task_id`, `aag.action_id`, `aag.input`, `aag.output`) and the policy results under `aag.policy.*` (below) are reserved, and no property can produce one of them — a property named `verb`, a group named `policy` or the bare `kind` leaf on a `step.gate` lands at `aag.properties.verb`, `aag.properties.policy.*` and `aag.properties.kind`.
 
